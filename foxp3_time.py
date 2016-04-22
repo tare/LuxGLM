@@ -13,6 +13,7 @@ from hashlib import md5
 
 import luxglm_routines
 
+# adapted from https://pystan.readthedocs.org/en/latest/avoiding_recompilation.html
 def stan_cache(model_name, **kwargs):
   f=open(model_name, 'rb')
   model_code=f.read()
