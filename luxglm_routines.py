@@ -99,7 +99,7 @@ def get_stan_input(counts,counts_control,priors_control,D):
 
   return data, init
 
-def savagedickey(prior1_mean,prior1_cov,prior2_mean,prior2_cov,samples1,samples2):
+def savagedickey(samples1,samples2,prior1_mean=numpy.zeros((3,)),prior1_cov=5.0*numpy.eye(3),prior2_mean=numpy.zeros((3,)),prior2_cov=5.0*numpy.eye(3)):
   Delta_theta = numpy.vstack(((numpy.array([samples1[:,0]]).T - samples2[:,0]).flatten(1),(numpy.array([samples1[:,1]]).T - samples2[:,1]).flatten(1),(numpy.array([samples1[:,2]]).T - samples2[:,2]).flatten(1)))
   density = scipy.stats.kde.gaussian_kde(Delta_theta,bw_method='scott')
 
