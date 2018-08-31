@@ -20,29 +20,17 @@ An usual LuxRep pipeline has the following steps
 
 This documentation focus on 3
 
-[//]: # (## Prerequisites)
-
 ## Installation
-
-[//]: # (Below the environmental parameters $STAN_HOME and $LUXREP_HOME refers to the source directories of CmdStan and LuxRep)
 
 Below the environmental parameter $STAN_HOME refers to the source directory of CmdStan
 
 LuxRep requires the following software
-
-[//]: # (* LuxRep requires __CmdStan__ (tested on version XX), __Python__ (tested on version XX), __Numpy__, __Scipy__ and __pystan__)
 
 * __CmdStan__ (tested on version 2.18.0)
 * __Python__ (tested on version 2.7.15)
 * __pystan__ (tested on version 2.17.1.0)
 * __Numpy__ (tested on version 1.15.1)
 * __Scipy__ (tested on version 1.1.0)
-
-[//]: # (For instructions on installing __CmdStan__, please see __$STAN_HOME/README.txt__ and the documentation of __CmdStan__ from http://mc-stan.org/interfaces/cmdstan.html)
-
-[//]: # (##### Compiling LuxRep)
-
-[//]: # (The LuxRep source code is)
 
 
 ## Using LuxRep
@@ -54,27 +42,16 @@ The first step in using LuxRep is to estimate the library-specific experimental 
 	 Estimates experimental parameters bsEff and seqErr
 	 
 	 optional arguments:
-	 -h, --help																			show this help message and exit
+	 -h, --help										show this help message and exit
 	 -c CONTROL_DATA_TOTAL_READCOUNTS, --coverage_data CONTROL_DATA_TOTAL_READCOUNTS	file containing control cytosine total readcount data
-	 -m CONTROL_DATA_C_READCOUNTS, --methylation_data CONTROL_DATA_C_READCOUNTS			file containing control cytosine methylation count (C) data
-	 -l $STAN_HOME, --cmdstan_loc $STAN_HOME 											cmdstan directory with full pathname
-	 -o OUTFOLDER, --outfolder OUTFOLDER												directory containing control output with full pathname
-	 -v, --version																		show program's version number and exit
+	 -m CONTROL_DATA_C_READCOUNTS, --methylation_data CONTROL_DATA_C_READCOUNTS		file containing control cytosine methylation count (C) data
+	 -l $STAN_HOME, --cmdstan_loc $STAN_HOME 						cmdstan directory with full pathname
+	 -o OUTFOLDER, --outfolder OUTFOLDER							directory containing control output with full pathname
+	 -v, --version										show program's version number and exit
 
 For instance, luxrep\_exp.py can be called as
 
     python luxrep_exp.py -c data/TRs_cov.txt -m data/TRs_meth.txt -l $STAN_HOME
-
-[//]: # (## Example)
-[//]: # (Example from the manuscript (luxrep_exp.py and luxrep.py). The example can be run as follows:)
-
-[//]: # ( # To compute bisulfite conversion and sequencing error rates:)
-[//]: # ( python luxrep_exp.py -c data/TRs_cov.txt -m data/TRs_meth.txt -o <outfolder with full pathname> -l <cmdstan directory with full pathname>)
-    
-[//]: # ( # To determine differential methylation:)
-[//]: # ( python luxrep.py -d data/chunk_table_0.txt -s data/sample_list.txt -m data/design_matrix.txt -c <directory containing output of controls module>) -o <outfolder with full pathname> -l <cmdstan directory with full pathname>)
-
-[//]: # (The following section describes the input and output files of this module.)
 
 *Input*
 
@@ -95,14 +72,14 @@ The second step in using LuxRep is estimating the methylation levels of the nonc
 	 Estimates experimental parameters bsEff and seqErr
 	 
 	 optional arguments:
-	 -h, --help															show this help message and exit
-	 -d NONCONTROL_DATA, --data NONCONTROL_DATA							file containing noncontrol cytosine data
-	 -s SAMPLE_LIST, --sample_list SAMPLE_LIST							file containing sample number of libraries
-	 -m DESIGN_MATRIX, --design_matrix									file containing design matrix
+	 -h, --help								show this help message and exit
+	 -d NONCONTROL_DATA, --data NONCONTROL_DATA				file containing noncontrol cytosine data
+	 -s SAMPLE_LIST, --sample_list SAMPLE_LIST				file containing sample number of libraries
+	 -m DESIGN_MATRIX, --design_matrix					file containing design matrix
 	 -c EXPERIMENTAL_PARAMETERS, --exp_params EXPERIMENTAL_PARAMETERS	directory containing output for control data with full pathname
-	 -o OUTFOLDER, --outfolder OUTFOLDER								directory containing data analysis output with full pathname
-	 -l $STAN_HOME, --cmdstan_loc $STAN_HOME 							cmdstan directory with full pathname
-	 -v, --version														show program's version number and exit
+	 -o OUTFOLDER, --outfolder OUTFOLDER					directory containing data analysis output with full pathname
+	 -l $STAN_HOME, --cmdstan_loc $STAN_HOME 				cmdstan directory with full pathname
+	 -v, --version								show program's version number and exit
 
 For instance, luxrep.py can be called as
 
