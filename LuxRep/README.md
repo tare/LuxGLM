@@ -18,7 +18,7 @@ An usual LuxRep pipeline has the following steps
 	1. Estimate experimental parameters from control cytosine data
 	2. Quantify methylation modification and identify differential methylation
 
-This documentation focus on 3
+This documentation focuses on 3
 
 ## Installation
 
