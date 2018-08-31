@@ -15,8 +15,8 @@ An usual LuxRep pipeline has the following steps
 1. Alignment of BS-seq data
 2. Extraction of converted and unconverted counts
 3. Methylation analysis
- 1. Estimate experimental parameters from control cytosine data
- 2. Quantify methylation modification and identify differential methylation
+	1. Estimate experimental parameters from control cytosine data
+	2. Quantify methylation modification and identify differential methylation
 
 This documentation focus on 3
 
