@@ -3,9 +3,9 @@ data {
 
   int<lower=1> P; // number of predictors
 
-  int<lower=1> N; // number of rows
+  int<lower=1> N; // number of samples
 	
-  int<lower=1> M; // number of rows
+  int<lower=1> M; // number of libraries
 
   real<lower=0,upper=1> bsEff[M];
   real<lower=0,upper=1> seqErr[M];
@@ -15,10 +15,9 @@ data {
   int<lower=0> bsTot[K,M];
 
   matrix[N,P] D; // design matrix
-  int tr2br[M]; // design matrix
-  matrix[N,P] I_D;
+  int tr2br[M]; // grouping
 
-  matrix[P,1] mu_B;
+  vector[P] mu_B;
   cov_matrix[P] V_B_U_B;
 
   real<lower=0> alpha;
@@ -28,23 +27,18 @@ data {
 }
 
 transformed data {
-  vector[P] vec_mu_B;
 
   cholesky_factor_cov[P] chol_V_B_U_B;
-
-  for (i in 1:P) {
-    vec_mu_B[i] = mu_B[i,1];
-  }
 
   chol_V_B_U_B = cholesky_decompose(V_B_U_B);
 }
 
 parameters {
-  matrix[P,1] B[K];
+  vector[P] B[K];
 
   real<lower=0> sigma2_E[K];
 
-  matrix[N,1] Y[K];
+  vector[N] Y[K];
 
 }
 
@@ -53,7 +47,7 @@ transformed parameters {
 
   for (s in 1:N) {
     for (n in 1:K) {
-      theta[n,s] = inv_logit(Y[n,s,1]');
+      theta[n,s] = inv_logit(Y[n,s]');
     }
   }
 }
@@ -61,8 +55,8 @@ transformed parameters {
 model {
   for (n in 1:K) {
     sigma2_E[n] ~ gamma(alpha,beta);
-    to_vector(B[n]) ~ multi_normal_cholesky(vec_mu_B,chol_V_B_U_B);
-    to_vector(Y[n]) ~ multi_normal_prec(I_D*to_vector(B[n]),sigma2_E[n]*V_E_U_E);
+    B[n] ~ multi_normal_cholesky(mu_B,chol_V_B_U_B);
+    Y[n] ~ multi_normal_prec(D*B[n],sigma2_E[n]*V_E_U_E);
   }
 
   for (s in 1:M) {
