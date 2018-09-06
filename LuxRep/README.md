@@ -73,7 +73,7 @@ The examples above may be used for control data generated from the lambda phage 
 
 *Output*
 
-The output files consist of [](data and init files formatted as data dumps for input to the executable and) __stan__-generated diagnostic and output files including **output.csv** which contains samples from the approximate posterior of the model parameters. The mean posterior for the parameters bsEff and seqErr from the latter is used as estimates of the experimental parameters used in the second module. 
+The output files consist of __stan__-generated diagnostic and output files including **output.csv** which contains samples from the approximate posterior of the model parameters. The mean posterior for the parameters bsEff and seqErr from the latter is used as estimates of the experimental parameters used in the second module. 
 
 The second step in using LuxRep is estimating the methylation levels of the noncontrol cytosine and determining differential methylation. A python script **luxrep.py** is supplied for generating input files from user-supplied data files and running the analysis (includes compiling of relevant __stan__ code). 
 
