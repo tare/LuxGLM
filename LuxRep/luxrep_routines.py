@@ -92,24 +92,21 @@ def get_stan_input(counts,sample_list,D,params):
 	# number of covariates
 	P = D.shape[1]
 
-	# coefficient matrix
-	B = numpy.zeros((K,P,1))
+	# coefficient vector
+	B = numpy.zeros((K,P))
 
 	#
 	sigma2_E = numpy.array([1]*K)
 
-	# kronecker product of I and D
-	I_D = numpy.kron(numpy.eye(1),D)
-
 	sigma2_B = 5
 
-	mu_B = numpy.zeros((P,1))
+	mu_B = numpy.zeros(P)
 	# kronecker product of V_B and U_B
-	V_B_U_B = sigma2_B*numpy.kron(numpy.eye(1),numpy.eye(P))
+	V_B_U_B = sigma2_B*numpy.eye(P)
 	alpha = 1
 	beta = 1
-	V_E_U_E = numpy.kron(numpy.eye(1),numpy.eye(N))
-	Y = numpy.zeros((K,N,1))
+	V_E_U_E = numpy.eye(N)
+	Y = numpy.zeros((K,N))
 	bsBEff = .001
 	# experimental parameters
 	bsEff, seqErr = params['bsEff'], params['seqErr']
@@ -118,7 +115,7 @@ def get_stan_input(counts,sample_list,D,params):
 	# data and init dictionaries
 	data = {'P': P, 'N': N, 'K': K, 'bsBEff': bsBEff,
 	'bsC': bsC, 'bsTot': bsTot, 'tr2br': sample_list, 'M': M,
-	'D': D, 'I_D': I_D, 'mu_B': mu_B, 'V_B_U_B': V_B_U_B,
+	'D': D, 'mu_B': mu_B, 'V_B_U_B': V_B_U_B,
 	'alpha': alpha, 'beta': beta, 'V_E_U_E': V_E_U_E,
 	'bsEff': bsEff, 'seqErr': seqErr}
 
