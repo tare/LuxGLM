@@ -45,12 +45,12 @@ The first step in using LuxRep is to estimate the library-specific experimental 
 	 Estimates experimental parameters bsEff and seqErr
 	 
 	 optional arguments:
-	 -h, --help														show this help message and exit
+	 -h, --help							show this help message and exit
 	 -f CONTROL_DATA_FILES_LIST, -file_list CONTROL_DATA_FILES_LIST	space-delimited list of bed files from bismark pipeline (or similar format) containing counts from control cytosine
 	 -n LIBRARY_LABELS_LIST, --library_names LIBRARY_LABELS_LIST	space-delimited list of labels for files listed in lambda_fileList.txt
-	 -l $STAN_HOME, --cmdstan_loc $STAN_HOME 						cmdstan directory with full pathname
-	 -o OUTFOLDER, --outfolder OUTFOLDER							directory containing control output with full pathname
-	 -v, --version													show program's version number and exit
+	 -l $STAN_HOME, --cmdstan_loc $STAN_HOME 			cmdstan directory with full pathname
+	 -o OUTFOLDER, --outfolder OUTFOLDER				directory containing control output with full pathname
+	 -v, --version							show program's version number and exit
 
 For instance, luxrep\_exp.py can be called as
 
@@ -73,15 +73,15 @@ The second step in using LuxRep is estimating the methylation levels of the nonc
 	 Estimates experimental parameters bsEff and seqErr
 	 
 	 optional arguments:
-	 -h, --help															show this help message and exit
-	 -d NONCONTROL_DATA, --data NONCONTROL_DATA							file containing noncontrol cytosine data
-	 -s SAMPLE_LIST, --sample_list SAMPLE_LIST							file containing sample number of libraries
-	 -m DESIGN_MATRIX, --design_matrix									file containing design matrix
+	 -h, --help								show this help message and exit
+	 -d NONCONTROL_DATA, --data NONCONTROL_DATA				file containing noncontrol cytosine data
+	 -s SAMPLE_LIST, --sample_list SAMPLE_LIST				file containing sample number of libraries
+	 -m DESIGN_MATRIX, --design_matrix					file containing design matrix
 	 -n LIBRARY_LABELS_LIST, --library_names LIBRARY_LABELS_LIST		space-delimited list of labels for files listed in lambda_fileList.txt
 	 -c EXPERIMENTAL_PARAMETERS, --exp_params EXPERIMENTAL_PARAMETERS	directory containing output for control data with full pathname
-	 -o OUTFOLDER, --outfolder OUTFOLDER								directory containing data analysis output with full pathname
-	 -l $STAN_HOME, --cmdstan_loc $STAN_HOME 							cmdstan directory with full pathname
-	 -v, --version														show program's version number and exit
+	 -o OUTFOLDER, --outfolder OUTFOLDER					directory containing data analysis output with full pathname
+	 -l $STAN_HOME, --cmdstan_loc $STAN_HOME 				cmdstan directory with full pathname
+	 -v, --version								show program's version number and exit
 
 For instance, luxrep.py can be called as
 
@@ -110,11 +110,11 @@ Taken from **Radmeth**'s pipeline, an optional step allows pseudo-parallelizatio
 	 Splits coverage table
 	 
 	 optional arguments:
-	 -h, --help															show this help message and exit
-	 -d NONCONTROL_DATA, --data NONCONTROL_DATA							file containing noncontrol cytosine data
-	 -s SPLIT_SIZE, --split_size SPLIT_SIZE								number of cytosine in split table
-	 -o OUTFOLDER, --outfolder OUTFOLDER								directory containing data analysis output with full pathname
-	 -v, --version														show program's version number and exit
+	 -h, --help					show this help message and exit
+	 -d NONCONTROL_DATA, --data NONCONTROL_DATA	file containing noncontrol cytosine data
+	 -s SPLIT_SIZE, --split_size SPLIT_SIZE		number of cytosine in split table
+	 -o OUTFOLDER, --outfolder OUTFOLDER		directory containing data analysis output with full pathname
+	 -v, --version					show program's version number and exit
 
 For instance, split\_inputTable.py can be called as
 
