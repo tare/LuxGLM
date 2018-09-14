@@ -21,6 +21,7 @@ The following tutorial consists of instructions for using LuxRep to perform meth
 #### Preliminaries
 
 Download LuxRep
+See **Installation** section of **README**
 
 #### Estimating experimental parameters
 
