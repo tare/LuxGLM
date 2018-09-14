@@ -13,7 +13,6 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--data', action='store', dest='data_file', type=str, required=True, help='file containing noncontrol cytosine data')
     parser.add_argument('-s', '--split_size', action='store', dest='split_size', type=int, required=True, help='number of cytosine in split table')
     parser.add_argument('-o', '--outfolder', action='store', dest='outfolder', type=str, required=False, default='%s/results'%os.getcwd(), help='directory containing split tables with full pathname')
-    parser.add_argument('-v','--version',action='version',version='%(prog)s 0.666')
     options = parser.parse_args()
 
     if not os.path.exists(options.outfolder): os.makedirs(options.outfolder)
