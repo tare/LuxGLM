@@ -8,17 +8,16 @@ import os
 
 def get_stan_controls_input(bsTot_control, bsC_control):
 	# number of control cytosines and number of samples	
-	K_control, N = bsTot_control.shape
+	K_control, N = bsTot_control.shape[0], 1
 
 	# priors for theta of the control cytosines
 	priors_control = [[999,1] for _ in range(K_control)]
 
 	# values of theta of control cytosines for stan initialization
-	theta_control = numpy.zeros((K_control,N,2))
+	theta_control = numpy.zeros((K_control,2))
 
 	for k in range(0,K_control):
-		for n in range(0,N):
-			theta_control[k,n,:] = numpy.random.dirichlet(priors_control[k])
+	    theta_control[k,:] = numpy.random.dirichlet(priors_control[k])
 
 	# hyperpriors for bisulfite conversion efficiency
 	mu_mu_bsEff, sigma_mu_bsEff = 4, 1.29
@@ -62,16 +61,15 @@ def get_stan_controls_input(bsTot_control, bsC_control):
 
 	return data, init
 
-def get_exp_params(exp_params):
+def get_exp_params(exp_params,libraries):
+        bsEff, seqErr = [], []
 	# get bsEff and seqErr, parse from earlier output file
-	infile = '%s/output.csv'%exp_params
-	lines = open(infile,'r').readlines()[28:32]
-	bsEff, seqErr = [], []
-	
-	line1, line2 = lines[0].strip().split(','), lines[-1].strip().split(',')
-	for a,b in zip(line1,line2):
-		if a.split('.')[0] == 'bsEff': bsEff.append(float(b))
-		if a.split('.')[0] == 'seqErr': seqErr.append(float(b))
+        for library in libraries:
+            infile = '%s/%s/output.csv'%(exp_params,library)
+            #lines = open(infile,'r').readlines()[28:32]
+            line = open(infile,'r').readlines()[31].strip().split(',')
+            seqErr.append(float(line[-1]))
+            bsEff.append(float(line[-2]))
 	
 	return bsEff, seqErr
 
@@ -134,7 +132,26 @@ def savagedickey(locus):
 	fo.close()
 	# os.system('rm output.csv')
 
+def savagedickey2(fileList,par):
+        sigma2_B = 5
+        outfile = '%s/bfs_%s.bed'%(os.getcwd(),par)
+        fo = open(outfile,'w')
+        for line in open(fileList,'r').readlines():
+            infile = line.strip()
+            pos = infile.split('/')[-2]
+            beta = np.loadtxt(infile, delimiter=',', skiprows=33, usecols=(par,))
+            density = scipy.stats.kde.gaussian_kde(beta,bw_method='scott')
+            numerator = scipy.stats.multivariate_normal.pdf([0],mean=[0],cov=[sigma2_B])
+            denominator = density.evaluate([0])[0]
+            bf=numerator/denominator
+            print >> fo, '%s\t%s'%('\t'.join(pos.split('_')),bf)
+        fo.close()
+
 def combine_bfs(outfile,loci):
 	outdir = '/'.join(outfile.split('/')[:-1])
 	os.system('cat %s/{%s}/bf.txt | sort -k1,1 -k2,2n > %s'%(outdir, ','.join(u.replace(':','_') for u in loci), outfile))
+
+def cleanup(outfolder,file_list):
+        for f in file_list:
+            os.system('rm -f %s/*/%s'%(outfolder,f))
 

@@ -18,8 +18,9 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='LuxRep')
 	parser.add_argument('-d', '--data', action='store', dest='data_file', type=str, required=True, help='file containing noncontrol cytosine data')
 	parser.add_argument('-s', '--sample_list', action='store', dest='sample_list_file', type=str, required=True, help='file containing sample number of libraries')
+        parser.add_argument('-n', '--library_names', action='store', dest='library_names', type=str, required=False, default='data/nameList.txt', help='file listing library labels, same as input file used in luxrep_exp module')
 	parser.add_argument('-m', '--design_matrix', action='store', dest='design_file', type=str, required=True, help='file containing design matrix')
-	parser.add_argument('-c', '--exp_params', action='store', dest='experimental_parameters_folder', type=str, required=False, default='%s/control_dir'%os.getcwd(), help='directory containing output for control data with full pathname')
+	parser.add_argument('-c', '--exp_params', action='store', dest='experimental_parameters_folder', type=str, required=False, default='%s/control_dir'%os.getcwd(), help='directory containing output from control data with full pathname')
 	parser.add_argument('-o', '--outfolder', action='store', dest='outfolder', type=str, required=False, default='%s/results'%os.getcwd(), help='directory containing data analysis output with full pathname')
 	parser.add_argument('-l','--cmdstan_loc', action='store', dest='cmdstan_directory', type=str, required=True, help='cmdstan directory with full pathname')
 	parser.add_argument('-v','--version',action='version',version='%(prog)s 0.666')
@@ -34,6 +35,8 @@ if __name__ == '__main__':
 
 	loci = numpy.genfromtxt(options.data_file,delimiter='\t',skip_header=1, dtype='str', usecols=(0,))
 
+        libraries = open(options.library_names,'r').readline().strip().split()
+
 	numLoci = len(loci)
 
 	with open(options.design_file) as f:
@@ -43,7 +46,7 @@ if __name__ == '__main__':
 
 	exp_params = options.experimental_parameters_folder
 	
-	bsEff, seqErr = luxrep_routines.get_exp_params(exp_params)
+	bsEff, seqErr = luxrep_routines.get_exp_params(exp_params,libraries)
 	
 	params = {'bsEff':bsEff, 'seqErr':seqErr}
 	
@@ -83,7 +86,10 @@ if __name__ == '__main__':
 		# compute bayes factor	
 		luxrep_routines.savagedickey(locus)
 
-	outfile = '%s/cpgs_%s.bed'%(outfolder, options.data_file.split('_')[-1].split('.')[0])
+        outfile = '%s/bfs.bed'%outfolder
 
 	# combine results for all cytosine
 	luxrep_routines.combine_bfs(outfile,loci)
+
+        luxrep_routines.cleanup(outfolder, ['luxrep'])
+
