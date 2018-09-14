@@ -18,8 +18,8 @@ import luxrep_routines
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='LuxRep')
 	parser.add_argument('-f','--file_list', action='store', dest='file_list', type=str, required=False, default='data/lambda_fileList.txt', help='file containing list of files containing counts from control cytosine where each file holds data for one library')
-	parser.add_argument('-n', '--library_names', action='store', dest='library_names', type=str, required=False, default='data/nameList.txt', help='file listing library labels in the same order as file_list')
-	parser.add_argument('-o','--outfolder', action='store', dest='outfolder', type=str, required=False, default='%s/control_dir',%os.getcwd() help='directory containing control output with full pathname')
+	parser.add_argument('-n','--library_names', action='store', dest='library_names', type=str, required=False, default='data/nameList.txt', help='file listing library labels in the same order as file_list')
+	parser.add_argument('-o','--outfolder', action='store', dest='outfolder', type=str, required=False, default='%s/control_dir'%os.getcwd() help='directory containing control output with full pathname')
 	parser.add_argument('-l','--cmdstan_loc',action='store',dest='cmdstan_directory',type=str,required=True,help='cmdstan directory with full pathname')
 	parser.add_argument('-v','--version',action='version',version='%(prog)s 0.666')
 	options = parser.parse_args()
