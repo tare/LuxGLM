@@ -13,17 +13,16 @@ The following tutorial consists of instructions for using LuxRep to perform meth
 *For methylation analysis*
 
 * **hg19\_bed\_files.tar.gz** - compressed folder containing noncontrol cytosine bed files
-* **hg19.tar.gz** - formatted counts table from noncontrol cytosine, merged from library bed files
 * **sample_list.txt** -	file listing group membership (biological sample/replicate) of library, one line per library
 * **design_matrix.txt** - file encoding design matrix
 * **nameList.txt** - space-delimited list of labels for files listed in **lambda_fileList.txt**
 	
 
-###Preliminaries
+#### Preliminaries
 
 Download LuxRep
 
-###Estimating experimental parameters
+#### Estimating experimental parameters
 
 	cd $LUXREP_HOME
 	cd data
@@ -36,11 +35,11 @@ Download LuxRep
 	cd ..
 	python luxrep_exp.py -f data/lambda_fileList.txt -n data/nameList.txt -o $PWD/controls -l $STAN_HOME	
 
-###Methylation analysis
+#### Methylation analysis
 
 *Preprocess noncontrol cytosine data files*
 
-**unionBedGraphs** accepts bed files with 4 tab-delimited columns with the first three containing genomic coordinates. The command below takes the sum of columns 5 and 6 (from the **bismark** pipeline, these contain the counts for methylated and unmethylated cytosines, respectively) and, together with the first three columns, pipes the sum and methylated counts into an intermediate file. 
+**unionBedGraphs** accepts bed files with 4 tab-delimited columns with the first three containing genomic coordinates. The commands below take the sum of columns 5 and 6 (from the **bismark** pipeline, these contain the counts for methylated and unmethylated cytosines, respectively) and, together with the first three columns, pipes the sum and methylated counts into an intermediate file. 
 
 	cd $LUXREP_HOME
 	cd data
