@@ -68,7 +68,7 @@ The following tutorial consists of instructions for using LuxRep to perform meth
 
 *Estimate methylation levels and calculate bayes factors for differential methylation*
 
-By default, bayes factor is calculated for the significance of the second covariate in the design matrix (in the example **data/design_matrix.txt**, this is the "case" column).
+By default, Bayes factor is calculated for the significance of the second covariate in the design matrix (in the example **data/design_matrix.txt**, this is the "case" column).
 
 	python luxrep.py -d results/counts_1.tab -s data/sample_list.txt -m data/design_matrix.txt -n data/nameList.txt -c $PWD/controls -o $PWD/results/1 -l $STAN_HOME
 
@@ -85,3 +85,11 @@ To test significance of other covariates (after an initial run), a routine is su
 	>>> luxrep_routines.savagedickey2(file_list, n) # lists bayes factors and genomic positions in file bf_$n.bed
 
 An example of the output file is supplied as **data/misc/bfs\_1.bed** (also in **data/misc** is **counts\_1.tab**, an output of **split_inputTable.py** and example input file to **luxrep.py**).
+
+**References**
+
+[1] F. Krueger and S. R. Andrews, “Bismark: a flexible aligner and methylation caller for Bisulfite-Seq applications.,” Bioinformatics, 27.11:1571-1572, Jun 2011. 
+
+[2] A. R. Quinlan and I. M. Hall, “BEDTools: a flexible suite of utilities for comparing genomic features,” Bioinformatics, 26.6:841–842, Mar 2010.
+
+[3] E. Dolzhenko, and A. D. Smith, "RADMeth," http://smithlabresearch.org/wp-content/uploads/radmeth_manual.pdf

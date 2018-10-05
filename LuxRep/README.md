@@ -1,7 +1,7 @@
 # LuxRep
 
 ## Overview
-LuxRep is a methylation analysis tool that models replicates from different bisulphite-converted DNA libraries from the same biological replicate (i.e., technical replicates) thereby allowing use of technical replicates of varying bisulphite conversion rates. Faster processing suited for genome wide analysis is achieved by using variational inference for model estimation. These features extend on **LuxGLM**, a probabilistic method for methylation analysis that handles complex sample designs.
+LuxRep is a genome wide methylation analysis tool that models replicates from different bisulphite-converted DNA libraries from the same biological replicate (i.e., technical replicates) thereby allowing use of technical replicates of varying bisulphite conversion rates. Faster processing suited for genome wide analysis is achieved by using variational inference for posterior approximation. These features extend on **LuxGLM**, a probabilistic method for methylation analysis that handles complex sample designs.
 
 ## Features
 
@@ -12,17 +12,17 @@ LuxRep is a methylation analysis tool that models replicates from different bisu
 
 An usual LuxRep pipeline has the following steps
 
-1. Alignment of BS-seq data
-2. Extraction of converted and unconverted counts
-3. Methylation analysis
+1. Generate count data from sequecing reads using e.g. **Bismark**
+	1. Align BS-seq data
+	2. Extract converted and unconverted counts
+2. Format input files (sample scripts using **bedtools** provided below)
+3. Methylation analysis with **LuxRep** (instructions given below)
 	1. Estimate experimental parameters from control cytosine data
 	2. Quantify methylation modification and identify differential methylation
 
-This documentation focuses on 3
-
 ## Installation
 
-Below the environmental parameter $STAN_HOME refers to the source directory of CmdStan
+Below the environmental parameter $STAN_HOME refers to the source directory of **CmdStan**
 
 LuxRep requires the following software
 
@@ -35,9 +35,10 @@ LuxRep requires the following software
 In addition, data preprocessing can be facilitated by the following
 
 * __bedtools__ (tested on version 2.27.1)
+
 ## Using LuxRep
 
-The first step in using LuxRep is to estimate the library-specific experimental parameters bisulphite conversion efficiency (bsEff) and sequecing error rate (seqErr) from control cytosine data. A python script **luxrep\_exp.py** is supplied for generating input files from user-supplied data files and for estimating the experimental parameters (includes compiling of relevant __stan__ code). 
+The first step in using LuxRep is to estimate the library-specific experimental parameters bisulphite conversion efficiency (bsEff) and sequecing error rate (seqErr) from control cytosine data. A python script **luxrep\_exp.py** is supplied for generating input files from user-supplied data files and for estimating the experimental parameters (includes compiling of relevant __Stan__ code). 
 
 	 usage: luxrep_exp.py [-h] -f CONTROL_DATA_FILES_LIST -n LIBRARY_LABELS_LIST -l $STAN_HOME
 
@@ -48,7 +49,7 @@ The first step in using LuxRep is to estimate the library-specific experimental 
 	 -h, --help							show this help message and exit
 	 -f CONTROL_DATA_FILES_LIST, -file_list CONTROL_DATA_FILES_LIST	space-delimited list of bed files from bismark pipeline (or similar format) containing counts from control cytosine
 	 -n LIBRARY_LABELS_LIST, --library_names LIBRARY_LABELS_LIST	space-delimited list of labels for files listed in lambda_fileList.txt
-	 -l $STAN_HOME, --cmdstan_loc $STAN_HOME 			cmdstan directory with full pathname
+	 -l $STAN_HOME, --cmdstan_loc $STAN_HOME 			CmdStan directory with full pathname
 	 -o OUTFOLDER, --outfolder OUTFOLDER				directory containing control output with full pathname
 	 -v, --version							show program's version number and exit
 
@@ -64,9 +65,9 @@ The file **nameList.txt** contains a space-delimited list of labels for the libr
 
 *Output*
 
-The output files consist of __stan__-generated diagnostic and output files including **output.csv** which contains samples from the approximate posterior of the model parameters. The mean posterior for the parameters bsEff and seqErr from the latter are used as estimates of the experimental parameters used in the second module. 
+The output files consist of __Stan__-generated diagnostic and output files including **output.csv** which contains samples from the approximate posterior of the model parameters. The mean posterior for the parameters bsEff and seqErr from the latter are used as estimates of the experimental parameters used in the second module. 
 
-The second step in using LuxRep is estimating the methylation levels of the noncontrol cytosine and testing for differential methylation. A python script **luxrep.py** is supplied for generating input files from user-supplied data files and running the analysis (includes compiling of relevant __stan__ code). 
+The second step in using LuxRep is estimating the methylation levels of the noncontrol cytosine and testing for differential methylation. A python script **luxrep.py** is supplied for generating input files from user-supplied data files and running the analysis (includes compiling of relevant __Stan__ code). 
 
 	 usage: luxrep.py -d NONCONTROL_DATA -s SAMPLE_LIST -m DESIGN_MATRIX -n LIBRARY_LABELS_LIST -c EXPERIMENTAL_PARAMETERS -l $STAN_HOME
 	 
@@ -80,7 +81,7 @@ The second step in using LuxRep is estimating the methylation levels of the nonc
 	 -n LIBRARY_LABELS_LIST, --library_names LIBRARY_LABELS_LIST		space-delimited list of labels for files listed in lambda_fileList.txt
 	 -c EXPERIMENTAL_PARAMETERS, --exp_params EXPERIMENTAL_PARAMETERS	directory containing output for control data with full pathname
 	 -o OUTFOLDER, --outfolder OUTFOLDER					directory containing data analysis output with full pathname
-	 -l $STAN_HOME, --cmdstan_loc $STAN_HOME 				cmdstan directory with full pathname
+	 -l $STAN_HOME, --cmdstan_loc $STAN_HOME 				CmdStan directory with full pathname
 	 -v, --version								show program's version number and exit
 
 For instance, luxrep.py can be called as
@@ -89,7 +90,7 @@ For instance, luxrep.py can be called as
 
 *Input*
 
-The file **counts_1.tab** contains noncontrol cytosine data for all libraries in the dataset with data for each library corresponding to a two-column block, (i) total read count and (ii) "C" count. The first row contains labels for the libraries and each row thereafter contains data for one cytosine (this table format is the same as the one used by the methylation analysis tool **Radmeth**). For M libraries, each row contains 1 + 2xM columns with the first column showing the genomic coordinates (in the format `<chromosome>:<start>:<end>`) and the rest showing N<sub><sub>BS</sub>1</sub>\tN<sub><sub>BS,C</sub>1</sub>\tN<sub><sub>BS</sub>2</sub>\tN<sub><sub>BS,C</sub>2</sub>\t ... \tN<sub><sub>BS</sub>M</sub>\tN<sub><sub>BS,C</sub>M</sub>. The order of libraries should correspond with the order in the data files for the control cytosine used in the previous module. 
+The file **counts_1.tab** contains noncontrol cytosine data for all libraries in the dataset with data for each library corresponding to a two-column block, (i) total read count and (ii) "C" count. The first row contains labels for the libraries and each row thereafter contains data for one cytosine (this table format is the same as the one used by the methylation analysis tool **Radmeth**). For M libraries, each row contains 1 + 2xM tab-delimited columns with the first column showing the genomic coordinates (in the format `<chromosome>:<start>:<end>`) and the rest showing N<sub><sub>BS</sub>1</sub>, N<sub><sub>BS,C</sub>1</sub>, N<sub><sub>BS</sub>2</sub>, N<sub><sub>BS,C</sub>2</sub>, ..., N<sub><sub>BS</sub>M</sub>, N<sub><sub>BS,C</sub>M</sub>. The order of libraries should correspond with the order in the data files for the control cytosine used in the previous module. 
 
 When using output coverage files from **Bismark**'s pipeline (see file format description above in section for control data), with the **bedtools** toolset the following bash scripts may be used to merge the coverage files into the format required by **luxrep.py**. The file **fileList.txt** is a space-delimited list of the bed files (one bed file per library) and **nameList.txt** is a space-delimited list of library labels.
 
@@ -135,4 +136,14 @@ The directory specified by OUTFOLDER contains N<sub>cytosine</sub> subfolders ea
 To test for significance of a covariate other than the default (second column in the design matrix), a routine **savagedickey2** in the library file **luxrep_routines.py** is provided. The routine requires a text file containing a list of **output.csv** files with full pathname (one per line) for all cytosine to be analysed and a number (int) corresponding to the column in the design matrix of the covariate of interest (see **TUTORIAL**). The routine generates a bed file in the current directory with a list of Bayes factor for each cytosine in the same order as the input text file.
 
 **References**
+
+[1] T. Äijö, X. Yue, A. Rao and H. Lähdesmäki, “LuxGLM: a probabilistic covariate model for quantification of DNA methylation modifications with complex experimental designs.,” Bioinformatics, 32.17:i511-i519, Sep 2016.
+
+[2] F. Krueger and S. R. Andrews, “Bismark: a flexible aligner and methylation caller for Bisulfite-Seq applications.,” Bioinformatics, 27.11:1571-1572, Jun 2011. 
+
+[3] Stan Development Team, “Stan Modeling Language Users Guide and Reference Manual, Version 2.14.0.,” http://mc-stan.org, Jan 2016. 
+
+[4] Stan Development Team, “PyStan: the Python interface to Stan, Version 2.14.0.0.,” http://mc-stan.org, Jan 2016.
+
+[5] A. R. Quinlan and I. M. Hall, “BEDTools: a flexible suite of utilities for comparing genomic features,” Bioinformatics, 26.6:841–842, Mar 2010.
 

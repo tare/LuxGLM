@@ -91,20 +91,20 @@ def get_stan_input(counts,sample_list,D,params):
 	P = D.shape[1]
 
 	# coefficient vector
-	B = numpy.zeros((K,P))
+	B = numpy.zeros((K,P,2))
 
 	#
 	sigma2_E = numpy.array([1]*K)
 
 	sigma2_B = 5
 
-	mu_B = numpy.zeros(P)
+	mu_B = numpy.zeros((P,2))
 	# kronecker product of V_B and U_B
-	V_B_U_B = sigma2_B*numpy.eye(P)
+	V_B_U_B = sigma2_B*numpy.kron(numpy.eye(2),numpy.eye(P))
 	alpha = 1
 	beta = 1
-	V_E_U_E = numpy.eye(N)
-	Y = numpy.zeros((K,N))
+	V_E_U_E = numpy.kron(numpy.eye(2),numpy.eye(N))
+	Y = numpy.zeros((K,N,2))
 	bsBEff = .001
 	# experimental parameters
 	bsEff, seqErr = params['bsEff'], params['seqErr']
@@ -121,10 +121,10 @@ def get_stan_input(counts,sample_list,D,params):
   
 def savagedickey(locus):
 	sigma2_B = 5	
-	beta = np.loadtxt("output.csv", delimiter=',', skiprows=33, usecols=(2,))
+	beta = np.loadtxt("output.csv", delimiter=',', skiprows=33, usecols=(2,4))
 	density = scipy.stats.kde.gaussian_kde(beta,bw_method='scott')
-	numerator = scipy.stats.multivariate_normal.pdf([0],mean=[0],cov=[sigma2_B])
-	denominator = density.evaluate([0])[0]
+	numerator = scipy.stats.multivariate_normal.pdf([0,0],mean=[0,0],cov=np.eye*sigma2_B)
+	denominator = density.evaluate([0,0])[0]
 	bf=numerator/denominator
 	outfile = 'bf.txt'
 	fo = open(outfile,'w')
@@ -139,10 +139,10 @@ def savagedickey2(fileList,par):
         for line in open(fileList,'r').readlines():
             infile = line.strip()
             pos = infile.split('/')[-2]
-            beta = np.loadtxt(infile, delimiter=',', skiprows=33, usecols=(par,))
+            beta = np.loadtxt(infile, delimiter=',', skiprows=33, usecols=(par,par*2))
             density = scipy.stats.kde.gaussian_kde(beta,bw_method='scott')
-            numerator = scipy.stats.multivariate_normal.pdf([0],mean=[0],cov=[sigma2_B])
-            denominator = density.evaluate([0])[0]
+            numerator = scipy.stats.multivariate_normal.pdf([0],mean=[0],cov=np.eye*sigma2_B)
+            denominator = density.evaluate([0,0])[0]
             bf=numerator/denominator
             print >> fo, '%s\t%s'%('\t'.join(pos.split('_')),bf)
         fo.close()
