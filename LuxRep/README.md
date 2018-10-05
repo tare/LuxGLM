@@ -1,7 +1,7 @@
 # LuxRep
 
 ## Overview
-LuxRep is a genome wide methylation analysis tool that models replicates from different bisulphite-converted DNA libraries from the same biological replicate (i.e., technical replicates) thereby allowing use of technical replicates of varying bisulphite conversion rates. Faster processing suited for genome wide analysis is achieved by using variational inference for posterior approximation. These features extend on **LuxGLM**, a probabilistic method for methylation analysis that handles complex sample designs.
+LuxRep is a genome wide methylation analysis tool that models different bisulphite-converted DNA libraries from the same biological replicate (i.e., technical replicates) thereby allowing use of libraries of even low bisulphite conversion rates. Faster processing suited for genome wide analysis is achieved by using variational inference for posterior approximation. These features extend on **LuxGLM**, a probabilistic method for methylation analysis that handles complex sample designs.
 
 ## Features
 
