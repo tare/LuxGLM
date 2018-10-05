@@ -12,7 +12,7 @@ LuxRep is a genome wide methylation analysis tool that models different bisulphi
 
 An usual LuxRep pipeline has the following steps
 
-1. Generate count data from sequecing reads using e.g. **Bismark**
+1. Generate count data from sequencing reads using e.g. **Bismark**
 	1. Align BS-seq data
 	2. Extract converted and unconverted counts
 2. Format input files (sample scripts using **bedtools** provided below)
@@ -133,7 +133,7 @@ The directory specified by EXPERIMENTAL\_PARAMETERS contains the output files fr
 
 The directory specified by OUTFOLDER contains N<sub>cytosine</sub> subfolders each containing input, diagnostic and output files with the latter showing posterior samples of the model parameters for the corresponding cytosine. The second module includes a routine for computing a Bayes factor for differential methylation based on the covariate specified in **design\_matrix.txt**. A summary text file (in **.bed** format) lists the genomic coordinates for each cytosine in the input data file followed by its Bayes factor (**bfs.bed**).
 
-To test for significance of a covariate other than the default (second column in the design matrix), a routine **savagedickey2** in the library file **luxrep_routines.py** is provided. The routine requires a text file containing a list of **output.csv** files with full pathname (one per line) for all cytosine to be analysed and a number (int) corresponding to the column in the design matrix of the covariate of interest (see **TUTORIAL**). The routine generates a bed file in the current directory with a list of Bayes factor for each cytosine in the same order as the input text file.
+To test for significance of a covariate other than the default (second column in the design matrix), a routine **savagedickey2** in the library file **luxrep_routines.py** is provided. The routine requires a text file containing a list of **output.csv** files with full pathname (one per line) for all cytosine to be analysed and a number corresponding to the column in the design matrix of the covariate of interest (see **TUTORIAL**). The routine generates a bed file in the current directory with a list of Bayes factor for each cytosine in the same order as the input text file.
 
 **References**
 
