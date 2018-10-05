@@ -1,6 +1,6 @@
 ## TUTORIAL
 
-The following tutorial consists of instructions for using LuxRep to perform methylation analysis on a dataset consisting of 38 DNA libraries (from 22 biological samples). The coverage files consist of count data from loci in chr22.
+The following tutorial consists of instructions for using LuxRep to perform methylation analysis on a dataset consisting of 38 DNA libraries from 22 biological samples. The coverage files consist of count data from loci in chr22.
 
 #### Supplied files (in data folder)
 
