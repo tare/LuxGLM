@@ -101,6 +101,7 @@ def get_stan_input(counts,sample_list,D,params):
 	mu_B = numpy.zeros((P,2))
 	# kronecker product of V_B and U_B
 	V_B_U_B = sigma2_B*numpy.kron(numpy.eye(2),numpy.eye(P))
+        I_D = numpy.kron(numpy.eye(2),D)
 	alpha = 1
 	beta = 1
 	V_E_U_E = numpy.kron(numpy.eye(2),numpy.eye(N))
@@ -113,17 +114,17 @@ def get_stan_input(counts,sample_list,D,params):
 	# data and init dictionaries
 	data = {'P': P, 'N': N, 'K': K, 'bsBEff': bsBEff,
 	'bsC': bsC, 'bsTot': bsTot, 'tr2br': sample_list, 'M': M,
-	'D': D, 'mu_B': mu_B, 'V_B_U_B': V_B_U_B,
+        'D': D, 'I_D': I_D, 'mu_B': mu_B, 'V_B_U_B': V_B_U_B,
 	'alpha': alpha, 'beta': beta, 'V_E_U_E': V_E_U_E,
 	'bsEff': bsEff, 'seqErr': seqErr}
 
 	return data, init
   
-def savagedickey(locus):
+def savagedickey(locus,P):
 	sigma2_B = 5	
-	beta = np.loadtxt("output.csv", delimiter=',', skiprows=33, usecols=(2,4))
-	density = scipy.stats.kde.gaussian_kde(beta,bw_method='scott')
-	numerator = scipy.stats.multivariate_normal.pdf([0,0],mean=[0,0],cov=np.eye*sigma2_B)
+	beta = np.loadtxt("output.csv", delimiter=',', skiprows=32, usecols=(2,P+2))
+	density = scipy.stats.kde.gaussian_kde(np.transpose(beta),bw_method='scott')
+	numerator = scipy.stats.multivariate_normal.pdf([0,0],mean=[0,0],cov=np.eye(2)*sigma2_B)
 	denominator = density.evaluate([0,0])[0]
 	bf=numerator/denominator
 	outfile = 'bf.txt'
@@ -132,16 +133,17 @@ def savagedickey(locus):
 	fo.close()
 	# os.system('rm output.csv')
 
-def savagedickey2(fileList,par):
+def savagedickey2(fileList,par,design_file):
+        with open(design_file) as f: ncols = len(f.readline().split())
         sigma2_B = 5
         outfile = '%s/bfs_%s.bed'%(os.getcwd(),par)
         fo = open(outfile,'w')
         for line in open(fileList,'r').readlines():
             infile = line.strip()
             pos = infile.split('/')[-2]
-            beta = np.loadtxt(infile, delimiter=',', skiprows=33, usecols=(par,par*2))
-            density = scipy.stats.kde.gaussian_kde(beta,bw_method='scott')
-            numerator = scipy.stats.multivariate_normal.pdf([0],mean=[0],cov=np.eye*sigma2_B)
+            beta = np.loadtxt(infile, delimiter=',', skiprows=32, usecols=(par,par+ncols))
+            density = scipy.stats.kde.gaussian_kde(np.transpose(beta),bw_method='scott')
+            numerator = scipy.stats.multivariate_normal.pdf([0,0],mean=[0,0],cov=np.eye(2)*sigma2_B)
             denominator = density.evaluate([0,0])[0]
             bf=numerator/denominator
             print >> fo, '%s\t%s'%('\t'.join(pos.split('_')),bf)

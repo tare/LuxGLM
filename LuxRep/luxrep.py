@@ -84,7 +84,7 @@ if __name__ == '__main__':
 		os.system('./luxrep variational output_samples=1000 elbo_samples=1000 grad_samples=10 data file=data.R init=init.R output diagnostic_file=diagnostics.csv > summary.txt')
 		while 'COMPLETED' not in open('summary.txt','r').readlines()[-1]: os.system('./luxrep variational output_samples=1000 elbo_samples=1000 grad_samples=10 data file=data.R init=init.R output diagnostic_file=diagnostics.csv > summary.txt')	
 		# compute bayes factor	
-		luxrep_routines.savagedickey(locus)
+		luxrep_routines.savagedickey(locus,ncols)
 
         outfile = '%s/bfs.bed'%outfolder
 
