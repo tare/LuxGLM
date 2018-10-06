@@ -82,7 +82,8 @@ To test significance of other covariates (after an initial run), a routine is su
 	>>> import luxrep_routines
 	>>> n = 3 # column number in design matrix corresponding to covariate of interest
 	>>> file_list = 'outputList.txt' # file containing list of output.csv files
-	>>> luxrep_routines.savagedickey2(file_list, n) # lists bayes factors and genomic positions in file bf_$n.bed
+	>>> design_file = 'data/design_matrix.txt' # file encoding design matrix used in initial run
+	>>> luxrep_routines.savagedickey2(file_list, n, design_file) # lists bayes factors and genomic positions in file bf_$n.bed
 
 An example of the output file is supplied as **data/misc/bfs\_1.bed** (also in **data/misc** is **counts\_1.tab**, an output of **split_inputTable.py** and example input file to **luxrep.py**).
 
