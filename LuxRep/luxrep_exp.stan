@@ -17,8 +17,8 @@ data {
 	
   int<lower=1> K_control; // number of control cytosines
 
-  int<lower=0> bsC_control[K_control,N];
-  int<lower=0> bsTot_control[K_control,N];
+  int<lower=0> bsC_control[K_control];
+  int<lower=0> bsTot_control[K_control];
 
   vector<lower=0>[2] alpha_control[K_control]; // prior for control cytosines
 }
@@ -32,7 +32,7 @@ parameters {
   real<lower=0> sigma_seqErr;
   real raw_seqErr[N];
 
-  simplex[2] theta_control[K_control,N];
+  simplex[2] theta_control[K_control];
 }
 
 transformed parameters {
@@ -48,10 +48,10 @@ transformed parameters {
 model {
   for (s in 1:N) {
     for (n in 1:K_control) {
-      theta_control[n,s] ~ dirichlet(alpha_control[n]);
-      bsC_control[n,s] ~ binomial(bsTot_control[n,s],
-        theta_control[n,s,1]*((1.0 - seqErr[s])*(1.0 - bsEff[s]) + seqErr[s] * bsEff[s]) +
-        theta_control[n,s,2]*((1.0 - bsBEff_fixed)*(1.0 - seqErr[s]) + seqErr[s] * bsBEff_fixed));
+      theta_control[n] ~ dirichlet(alpha_control[n]);
+      bsC_control[n] ~ binomial(bsTot_control[n],
+        theta_control[n,1]*((1.0 - seqErr[s])*(1.0 - bsEff[s]) + seqErr[s] * bsEff[s]) +
+        theta_control[n,2]*((1.0 - bsBEff_fixed)*(1.0 - seqErr[s]) + seqErr[s] * bsBEff_fixed));
     }
   }
 
