@@ -32,20 +32,19 @@ if __name__ == '__main__':
             chunk += 1 
             outfile = '%s/counts_%s.tab'%(options.outfolder,chunk)
             fo = open(outfile,'w')
-            print >> fo, header
-            print >> fo, line.strip()
+            print(header, file=fo)
+            print(line.strip(), file=fo)
             chrom = line.split(':')[0]
             continue
         if counter == 1:
             chunk += 1 
             outfile = '%s/counts_%s.tab'%(options.outfolder,chunk)
             fo = open(outfile,'w')
-            print >> fo, header
-        print >> fo, line.strip()
+            print(header, file=fo)
+        print(line.strip(), file=fo)
         if counter == size:
             fo.close() 
             counter = 0
 
     if counter < size: fo.close()
-    print 'split %s into %s tables (%s loci) in %s'%(options.data_file,chunk,size,options.outfolder)
-    
+    print(f'split {options.data_file} into {chunk} tables ({size} loci) in {options.outfolder}')
