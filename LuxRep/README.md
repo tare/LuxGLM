@@ -27,9 +27,9 @@ Below the environmental parameter $STAN_HOME refers to the source directory of *
 LuxRep requires the following software
 
 * __CmdStan__ (tested on version 2.18.0)
-* __Python__ (tested on version 2.7.15)
+* __Python__ (tested on version 3.7.5)
 * __pystan__ (tested on version 2.17.1.0)
-* __Numpy__ (tested on version 1.15.1)
+* __Numpy__ (tested on version 1.20.2)
 * __Scipy__ (tested on version 1.1.0)
 
 In addition, data preprocessing can be facilitated by the following
