@@ -129,7 +129,7 @@ def savagedickey(locus,P):
         bf=numerator/denominator
         outfile = 'bf.txt'
         fo = open(outfile,'w')
-        fo.write('%s\t%s'%(locus.replace('_','\t'), bf))
+        fo.write('%s\t%s\n'%(locus.replace('_','\t'), bf))
         fo.close()
         # os.system('rm output.csv')
 
@@ -146,7 +146,7 @@ def savagedickey2(fileList,par,design_file):
             numerator = scipy.stats.multivariate_normal.pdf([0,0],mean=[0,0],cov=np.eye(2)*sigma2_B)
             denominator = density.evaluate([0,0])[0]
             bf=numerator/denominator
-            fo.write('%s\t%s'%('\t'.join(pos.split('_')),bf))
+            fo.write('%s\t%s\n'%('\t'.join(pos.split('_')),bf))
         fo.close()
 
 def combine_bfs(outfile,loci):
