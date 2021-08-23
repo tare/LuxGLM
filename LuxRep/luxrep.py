@@ -18,7 +18,7 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='LuxRep')
 	parser.add_argument('-d', '--data', action='store', dest='data_file', type=str, required=True, help='file containing noncontrol cytosine data')
 	parser.add_argument('-s', '--sample_list', action='store', dest='sample_list_file', type=str, required=True, help='file containing sample number of libraries')
-        parser.add_argument('-n', '--library_names', action='store', dest='library_names', type=str, required=False, default='data/nameList.txt', help='file listing library labels, same as input file used in luxrep_exp module')
+	parser.add_argument('-n', '--library_names', action='store', dest='library_names', type=str, required=False, default='data/nameList.txt', help='file listing library labels, same as input file used in luxrep_exp module')
 	parser.add_argument('-m', '--design_matrix', action='store', dest='design_file', type=str, required=True, help='file containing design matrix')
 	parser.add_argument('-c', '--exp_params', action='store', dest='experimental_parameters_folder', type=str, required=False, default='%s/control_dir'%os.getcwd(), help='directory containing output from control data with full pathname')
 	parser.add_argument('-o', '--outfolder', action='store', dest='outfolder', type=str, required=False, default='%s/results'%os.getcwd(), help='directory containing data analysis output with full pathname')
@@ -34,8 +34,8 @@ if __name__ == '__main__':
 	counts_data = numpy.loadtxt(options.data_file,delimiter='\t',skiprows=1,dtype='int', usecols=range(1,ncols))
 
 	loci = numpy.genfromtxt(options.data_file,delimiter='\t',skip_header=1, dtype='str', usecols=(0,))
-
-        libraries = open(options.library_names,'r').readline().strip().split()
+	
+	libraries = open(options.library_names,'r').readline().strip().split()
 
 	numLoci = len(loci)
 
@@ -50,24 +50,24 @@ if __name__ == '__main__':
 	
 	params = {'bsEff':bsEff, 'seqErr':seqErr}
 	
-        outfolder = options.outfolder
-        if not os.path.exists(outfolder): os.makedirs(outfolder)
+	outfolder = options.outfolder
+	if not os.path.exists(outfolder): os.makedirs(outfolder)
+	
+	stan_dir = options.cmdstan_directory
 
-        stan_dir = options.cmdstan_directory
+	curdir = os.getcwd()
 
-        curdir = os.getcwd()
-
-        os.chdir(stan_dir)
+	os.chdir(stan_dir)
 	# compile stan file
-        os.system('make %s/luxrep'%(curdir))
+	os.system('make %s/luxrep'%(curdir))
 
 	# loop over cytosines
-        for n in range(numLoci):
+	for n in range(numLoci):
 		locus = loci[n].replace(':','_')
 		print n+1, locus
 
-                outdir = '%s/%s'%(outfolder, locus)
-                if not os.path.exists(outdir): os.makedirs(outdir)
+		outdir = '%s/%s'%(outfolder, locus)
+		if not os.path.exists(outdir): os.makedirs(outdir)
 
 		# get data per cytosine
 		counts = counts_data[n]
@@ -86,10 +86,10 @@ if __name__ == '__main__':
 		# compute bayes factor	
 		luxrep_routines.savagedickey(locus,ncols)
 
-        outfile = '%s/bfs.bed'%outfolder
+	outfile = '%s/bfs.bed'%outfolder
 
 	# combine results for all cytosine
 	luxrep_routines.combine_bfs(outfile,loci)
 
-        luxrep_routines.cleanup(outfolder, ['luxrep'])
+	luxrep_routines.cleanup(outfolder, ['luxrep'])
 
