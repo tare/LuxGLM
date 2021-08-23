@@ -64,7 +64,7 @@ if __name__ == '__main__':
 	# loop over cytosines
 	for n in range(numLoci):
 		locus = loci[n].replace(':','_')
-		print n+1, locus
+		print(n+1, locus)
 
 		outdir = '%s/%s'%(outfolder, locus)
 		if not os.path.exists(outdir): os.makedirs(outdir)
