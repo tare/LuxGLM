@@ -7,7 +7,6 @@ import numpy
 import numpy.random
 import scipy.stats
 import os
-from cmdstanpy.model import CmdStanModel
 
 import pystan
 import pickle
@@ -32,11 +31,7 @@ if __name__ == '__main__':
 
 	curdir = os.getcwd()
 	os.chdir(stan_dir)
-	#os.system('cp %s/luxrep_exp.stan %s'%(curdir,stan_dir))
-	#stream=subprocess.call('make %s\luxrep_exp.exe'%curdir, shell=True)
-	luxrep_exp_model=CmdStanModel(stan_file='luxrep_exp.stan')
-	#os.system('ping -n 300 127.0.0.1 > nul')
-	#os.system('cp %s/luxrep_exp.exe %s/.'%(stan_dir, curdir))
+	os.system('make %s/luxrep_exp'%curdir)
 
         # loop over library files
 
@@ -48,7 +43,6 @@ if __name__ == '__main__':
 
 		outdir = '%s/%s'%(options.outfolder,label)
 		if not os.path.exists(outdir): os.makedirs(outdir)
-		print(outdir)
 
             # get data and init dictionaries for stan
 		data, init = luxrep_routines.get_stan_controls_input(bsTot_control,bsC_control)
@@ -58,12 +52,11 @@ if __name__ == '__main__':
 		pystan.misc.stan_rdump(init,'%s/init.R'%outdir)
             
 		os.chdir(outdir)
-		os.system('cp %s/luxrep_exp.exe .'%curdir)
+		os.system('cp %s/luxrep_exp .'%curdir)
 
-		os.system("copy NUL summary.txt")
-		os.system('luxrep_exp.exe variational output_samples=1000 elbo_samples=1000 grad_samples=10 data file=data.R init=init.R output diagnostic_file=diagnostics.csv >> summary.txt')
-		while 'COMPLETED' not in open('summary.txt','r').readlines()[-1]: os.system('luxrep_exp.exe variational output_samples=1000 elbo_samples=1000 grad_samples=10 data file=data.R init=init.R output diagnostic_file=diagnostics.csv >> summary.txt')	
+		os.system('./luxrep_exp variational output_samples=1000 elbo_samples=1000 grad_samples=10 data file=data.R init=init.R output diagnostic_file=diagnostics.csv > summary.txt')
+		while 'COMPLETED' not in open('summary.txt','r').readlines()[-1]: os.system('./luxrep_exp variational output_samples=1000 elbo_samples=1000 grad_samples=10 data file=data.R init=init.R output diagnostic_file=diagnostics.csv > summary.txt')	
         
-	luxrep_routines.cleanup(options.outfolder, ['luxrep_exp.exe'])
+	luxrep_routines.cleanup(options.outfolder, ['luxrep_exp'])
 	#bsEff, seqErr = luxglm_routines.parse_controls_output(outdir) # or just save output files
 
