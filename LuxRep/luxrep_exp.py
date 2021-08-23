@@ -7,6 +7,7 @@ import numpy
 import numpy.random
 import scipy.stats
 import os
+from cmdstanpy.model import CmdStanModel
 
 import pystan
 import pickle
@@ -25,38 +26,44 @@ if __name__ == '__main__':
 	options = parser.parse_args()
 
 	# read list of library files and corresponding labels
-        files = open(options.file_list,'r').readline().strip().split()
-        labels = open(options.library_names,'r').readline().strip().split()
-        stan_dir = options.cmdstan_directory
+	files = open(options.file_list,'r').readline().strip().split()
+	labels = open(options.library_names,'r').readline().strip().split()
+	stan_dir = options.cmdstan_directory
 
-        curdir = os.getcwd()
-        os.chdir(stan_dir)
-        os.system('make %s/luxrep_exp'%curdir)
+	curdir = os.getcwd()
+	os.chdir(stan_dir)
+	#os.system('cp %s/luxrep_exp.stan %s'%(curdir,stan_dir))
+	#stream=subprocess.call('make %s\luxrep_exp.exe'%curdir, shell=True)
+	luxrep_exp_model=CmdStanModel(stan_file='luxrep_exp.stan')
+	#os.system('ping -n 300 127.0.0.1 > nul')
+	#os.system('cp %s/luxrep_exp.exe %s/.'%(stan_dir, curdir))
 
         # loop over library files
 
-        for infile,label in zip(files,labels):
-            os.chdir(curdir)
-            print label
-            bsC_control, bsT_control = numpy.loadtxt(infile,delimiter='\t',usecols=(4,5),dtype='int',unpack=True)
-            bsTot_control = bsT_control + bsC_control
+	for infile,label in zip(files,labels):
+		os.chdir(curdir)
+		print(label)
+		bsC_control, bsT_control = numpy.loadtxt(infile,delimiter='\t',usecols=(4,5),dtype='int',unpack=True)
+		bsTot_control = bsT_control + bsC_control
 
-            outdir = '%s/%s'%(options.outfolder,label)
-            if not os.path.exists(outdir): os.makedirs(outdir)
+		outdir = '%s/%s'%(options.outfolder,label)
+		if not os.path.exists(outdir): os.makedirs(outdir)
+		print(outdir)
 
             # get data and init dictionaries for stan
-            data, init = luxrep_routines.get_stan_controls_input(bsTot_control,bsC_control)
+		data, init = luxrep_routines.get_stan_controls_input(bsTot_control,bsC_control)
 
-            os.system('rm -f %s/output.csv'%outdir)
-            pystan.misc.stan_rdump(data,'%s/data.R'%outdir)
-            pystan.misc.stan_rdump(init,'%s/init.R'%outdir)
+		os.system('rm -f %s/output.csv'%outdir)
+		pystan.misc.stan_rdump(data,'%s/data.R'%outdir)
+		pystan.misc.stan_rdump(init,'%s/init.R'%outdir)
             
-            os.chdir(outdir)
-            os.system('cp %s/luxrep_exp .'%curdir)
+		os.chdir(outdir)
+		os.system('cp %s/luxrep_exp.exe .'%curdir)
 
-            os.system('./luxrep_exp variational output_samples=1000 elbo_samples=1000 grad_samples=10 data file=data.R init=init.R output diagnostic_file=diagnostics.csv > summary.txt')
-            while 'COMPLETED' not in open('summary.txt','r').readlines()[-1]: os.system('./luxrep_exp variational output_samples=1000 elbo_samples=1000 grad_samples=10 data file=data.R init=init.R output diagnostic_file=diagnostics.csv > summary.txt')	
+		os.system("copy NUL summary.txt")
+		os.system('luxrep_exp.exe variational output_samples=1000 elbo_samples=1000 grad_samples=10 data file=data.R init=init.R output diagnostic_file=diagnostics.csv >> summary.txt')
+		while 'COMPLETED' not in open('summary.txt','r').readlines()[-1]: os.system('luxrep_exp.exe variational output_samples=1000 elbo_samples=1000 grad_samples=10 data file=data.R init=init.R output diagnostic_file=diagnostics.csv >> summary.txt')	
         
-        luxrep_routines.cleanup(options.outfolder, ['luxrep_exp'])
+	luxrep_routines.cleanup(options.outfolder, ['luxrep_exp.exe'])
 	#bsEff, seqErr = luxglm_routines.parse_controls_output(outdir) # or just save output files
 
