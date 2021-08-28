@@ -95,7 +95,7 @@ The file **counts_1.tab** contains noncontrol cytosine data for all libraries in
 When using output coverage files from **Bismark**'s pipeline (see file format description above in section for control data), with the **bedtools** toolset the following bash scripts may be used to merge the coverage files into the format required by **luxrep.py**. The file **fileList.txt** is a space-delimited list of the bed files (one bed file per library) and **nameList.txt** is a space-delimited list of library labels.
 
 	# cd into the folder containing the bed files, generate intermediate files, one for each of the M libraries
-	for i in {1..$M}; do file=$i".bed"; ls $file; rm -f $i"_temp.bed"; cat $file | awk '{print $1 "\t" $2 "\t" $3 "\t" $5+$6 ";" $5}' > $i"_temp.bed"; done
+	for i in {1..M}; do file=$i".bed"; ls $file; rm -f $i"_temp.bed"; cat $file | awk '{print $1 "\t" $2 "\t" $3 "\t" $5+$6 ";" $5}' > $i"_temp.bed"; done
 	
 	# combine the intermediate bed files
 	unionBedGraphs -i $(cat ../fileList.txt) -names $(cat ../nameList.txt) -header -filler "0;0" | sed 's/'$'\t/:/;s/'$'\t/:/;s/;/'$'\t/g;s/chrom:start:end'$'\t//g' > ../hg19.tab
