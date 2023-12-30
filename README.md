@@ -1,151 +1,144 @@
 # LuxGLM: a probabilistic covariate model for quantification of DNA methylation modifications with complex experimental designs
 
-Overview
--------------
-LuxGLM is a method for quantifying oxi-mC species with arbitrary covariate structures from bisulphite based sequencing data. LuxGLM's probabilistic modeling framework combines a previously proposed hierarchical generative model of **Lux** for oxi-mC-seq data and a general linear model component to account for confounding effects.
+## Overview
+
+LuxGLM is a method for quantifying oxi-mC species with arbitrary covariate structures from bisulphite based sequencing data. LuxGLM's probabilistic modeling framework combines a previously proposed hierarchical generative model of Lux for oxi-mC-seq data and a general linear model component to account for confounding effects.
 
 ## Features
+
 - Model-based integration and analysis of BS-seq/oxBS-seq/TAB-seq/fCAB-seq/CAB-seq/redBS-seq/MAB-seq/etc. data from whole genome, reduced representation or targeted experiments
 - Accounts for confounding effects through general linear model component
 - Considers nonideal experimental parameters through modeling, including e.g. bisulphite conversion and oxidation efficiencies, various chemical labeling and protection steps etc.
 - Model-based integration of biological replicates
 - Detects differential methylation using Bayes factors (DMRs)
-- Full Bayesian inference implemented using **Stan**
+- Full Bayesian inference using NumPyro
 
 ## Quick introduction
+
 An usual LuxGLM pipeline has the following steps
 
 1. Alignment of BS-seq and oxBS-seq data (e.g., [Bismark](http://www.bioinformatics.babraham.ac.uk/projects/bismark/) or [BSmooth](http://rafalab.jhsph.edu/bsmooth/))
 
-2.  Extraction of converted and unconverted counts (e.g., [Bismark](http://www.bioinformatics.babraham.ac.uk/projects/bismark/) or [BSmooth](http://rafalab.jhsph.edu/bsmooth/))
+2. Extraction of converted and unconverted counts (e.g., [Bismark](http://www.bioinformatics.babraham.ac.uk/projects/bismark/) or [BSmooth](http://rafalab.jhsph.edu/bsmooth/))
 
 3. Integrative methylation analysis
 
 4. Analysis of obtained methylation estimates, e.g., using Bayes factors
 
-This documentation focus on points three and four.
-
-## Prerequisites 
-* Python 2.7 (https://www.python.org/)
-* PyStan (http://pystan.readthedocs.org/en/latest/)
-* NumPy (http://www.numpy.org/)
-* SciPy (http://www.scipy.org/)
+This documentation focuses on the third and fourth points.
 
 ## Installation
-To use our LuxGLM interface, one has to have PyStan installed. For instructions on installation of **PyStan**, please see the documentation of **PyStan** at http://pystan.readthedocs.io/en/latest/index.html.
 
-In addition to the Python interface, LuxGLM can be used through other available **Stan** interfaces (see http://mc-stan.org/interfaces/ for a list of available interfaces). Please take into account that we only provide a Python interface for preparing the necessary inputs variables; that is, if **RStan** or other interface is used, then the user has to write approriate routines for parsing input variables from data files.
+### PyPI
 
-Using LuxGLM
--------------
+```console
+$ pip install luglm
+```
 
-A python script **luxglm<span></span>.py** is supplied for generating input variables from user-supplied data files and running the analysis. 
+### GitHub
 
-    usage: luxglm.py [-h] -c CONTROL_DATA -p CONTROL_PRIOR -d DATA_FILE -m DESIGN_FILE [-v]
+Install the version from the main branch as follows
 
-    LuxGLM
+```console
+$ pip install git+https://github.com/tare/LuxGLM.git
+```
 
-     optional arguments:
-     -h, --help                                       show this help message and exit
-     -c CONTROL_DATA, --control_data CONTROL_DATA     file containing control cytosine data
-     -p CONTROL_PRIOR, --control_prior CONTROL_PRIOR  file containing prior knowledge on control cytosines
-     -d DATA_FILE, --data DATA_FILE                   file containing cytosine data
-     -m DESIGN_FILE, --design_matrix DESIGN_FILE      file containing design matrix
-     -o OUTPUT_FILE, --output OUTPUT_FILE             file for storing samples
-     -v, --version                                    show program's version number and exit
+## Usage
 
-For instance, the script **luxglm<span></span>.py** can be called as
+### Metadata
 
-    $ python luxglm.py -c control_data.txt -p control_prior.txt -d data.txt -m design_matrix.txt -o samples.p
+Count data and covariates are defined in the metadata file.
 
-In the following sections, we will cover describe the input files and their format.
+| name       | basal/tgf-beta | vitc | ra  | timepoint | count_file              | control_count_file             | control_definition_file |
+| ---------- | -------------- | ---- | --- | --------- | ----------------------- | ------------------------------ | ----------------------- |
+| TGFb_1_24h | 1              | 0    | 0   | 24        | wildtype/TGFb_1_24h.tsv | control/TGFb_1_24h_control.tsv | control_definitions.tsv |
+| TGFb_1_38h | 1              | 0    | 0   | 38        | wildtype/TGFb_1_38h.tsv | control/TGFb_1_38h_control.tsv | control_definitions.tsv |
+| TGFb_1_48h | 1              | 0    | 0   | 48        | wildtype/TGFb_1_48h.tsv | control/TGFb_1_48h_control.tsv | control_definitions.tsv |
 
-#### Control cytosines
-The files **control_data.txt** and **control_prior.txt** have the count data and prior information on the control cytosines of interest, respectively.
+The following columns are mandatory: `name`, `count_file`, `control_count_file`, and `control_definition`. Additionally, there has to be at least one covariate. In the above example, we have four covariates: `basal/tgf-beta`, `vitc`, `ra`, and `timepoint`.
 
-Each line (one line per control cytosine) in the file **control_data.txt** is composed of one or more sample-specific tab-separated blocks of four tab-separated nonnegative integers
->N<sub>BS</sub><sup>C</sup>\tN<sub>BS</sub>\tN<sub>oxBS</sub><sup>C</sup>\tN<sub>oxBS</sub>
+### Control cytosines
 
-That is, the number of Cs and the total BS-seq read-outs are listed first, which are followed by the number of Cs and total oxBS-seq read-outs.
-Each line in **control_data.txt** should have exactly 4×N<sub>samples</sub> values separated with the tabs (one quadruple per sample). Importantly, each of the sample specified in **data.txt** (covered in the next section) should have its own control data. Moreover, the order of the sample-specific blocks in **control_data.txt** and **data.txt** is assumed to be the same.
+The control cytosine data are supplied in the control count files. Each experiment will have its own file. The files contain location information (`chromosome` and `position`) and control type information (`control_cytosine`) for the control cytosines. Additionally, we have the number of Cs and and total number of read-outs from BS-seq and oxBS-seq experiments (`bs_c`, `bs_total`, `oxbs_c`, and `oxbs_total`).
 
-The prior knowledge on the control cytosines is supplied in the file **control_prior.txt**. Although the hierarchical model allows that the control cytosines would have different priors between replicates, this is not implemented in the current version. Therefore, each line in **control_prior.txt** should have exactly three tab-separated values and the order of the rows, i.e., control cytosines, should be the same in **control_data.txt** and **control_prior.txt**.
+| chromosome  | position | control_type | bs_c | bs_total | oxbs_c | oxbs_total |
+| ----------- | -------- | ------------ | ---- | -------- | ------ | ---------- |
+| Lambda_ctrl | 22924    | C            | 2    | 343      | 1      | 562        |
+| Lambda_ctrl | 22928    | C            | 2    | 341      | 1      | 561        |
+| Lambda_ctrl | 47359    | 5mC          | 3770 | 3857     | 4767   | 4877       |
+| Lambda_ctrl | 47367    | 5mC          | 3895 | 3962     | 4855   | 4979       |
+| Lambda_ctrl | 23789    | 5hmC         | 3792 | 3964     | 79     | 865        |
+| Lambda_ctrl | 23794    | 5hmC         | 3901 | 4115     | 62     | 934        |
 
-#### Noncontrol cytosines
-The files **data.txt** and **design_matrix.txt** have the count data of the noncontrol cytosines of interest and the covariate structure of the samples, respectively.
+The prior knowledge on the control cytosines is supplied in the control definition file. Note that `control_type` is used to link the control count data and control definitions.
 
-As with control cytosines in **control_data.txt**, each of the noncontrol cytosine has its own line in **data.txt**. Each line in **data.txt** is composed of one or more sample-specific tab-separated blocks of four tab-separated nonnegative integers
->N<sub>BS</sub><sup>C</sup>\tN<sub>BS</sub>\tN<sub>oxBS</sub><sup>C</sup>\tN<sub>oxBS</sub>
+| control_type | C_pseudocount | 5mC_pseudocount | 5hmC_pseudocount |
+| ------------ | ------------- | --------------- | ---------------- |
+| C            | 998           | 1               | 1                |
+| 5mC          | 1             | 998             | 1                |
+| 5hmC         | 6             | 2               | 72               |
 
-That is, the number of Cs and the total BS-seq read-outs are listed first, which are followed by the number of Cs and total oxBS-seq read-outs. Moreover, on each line there should be exactly 4×N<sub>samples</sub> values separated with the tabs (one quadruple per sample).
+### Noncontrol cytosines
 
-The file **design_matrix.txt** holds covariate information (of N<sub>covariates</sub>) of the N<sub>samples</sub> samples
->D<sub>1,1</sub>\tD<sub>1,2</sub>\t…\tD<sub>1,N<sub>covariates</sub></sub><br>
->D<sub>2,1</sub>\tD<sub>2,2</sub>\t…\tD<sub>2,N<sub>covariates</sub></sub><br>
->⋮<br>
->D<sub>N<sub>samples</sub>,1</sub>\tD<sub>N<sub>samples</sub>,2</sub>\t…\tD<sub>N<sub>samples</sub>,N<sub>covariates</sub></sub>
+The non-control cytosine data are supplied in the count files. Each experiment will have its own file. The files contain location information (`chromosome` and `position`) for the non-control cytosines. Additionally, we have the number of Cs and and total number of read-outs from BS-seq and oxBS-seq experiments (`bs_c`, `bs_total`, `oxbs_c`, and `oxbs_total`).
 
-The order of the samples (i.e. rows) in **design_matrix.txt** should match with the order of blocks in **control_data.txt** and **data.txt**. 
+| chromosome | position | bs_c | bs_total | oxbs_c | oxbs_total |
+| ---------- | -------- | ---- | -------- | ------ | ---------- |
+| chrX       | 7159069  | 1083 | 1563     | 850    | 2736       |
+| chrX       | 7159186  | 1341 | 1534     | 2119   | 2719       |
+| chrX       | 7159222  | 4949 | 5575     | 3886   | 4639       |
+| chrX       | 7159235  | 4831 | 5588     | 4354   | 4641       |
 
-#### Output
-The obtained posterior samples are stored in the variable pickled in the file **samples.p**; the pickled variable is obtained using the *extract* method of the obtained *StanFit* instance (for more details, please see http://pystan.readthedocs.io/en/latest/api.html).
+### LuxGLM analysis
 
-Most of the users are interested in posterior samples of methylation levels
+The following lines are sufficient to run LuxGLM
 
- * **theta** for noncontrol cytosines and
- * **theta_control** for control cytosines
- 
-and posterior samples of the experimental parameters
+```python
+import numpyro
+from jax import random
+from luxglm.inference import run_nuts
+from luxglm.utils import get_input_data
 
- * **bsEff** for bisulphite conversion efficiency,
- * **bsBEff** for inaccurate bisulphite conversion efficiency,
- * **oxEff** for oxidation efficiency, and
- * **seqErr** for sequencing error probability.
+numpyro.enable_x64()
 
-For instance, the posterior mean estimate of **oxEff** can be obtained as
+# read input data
+lux_input_data = get_input_data("metadata.tsv")
 
-    >>> print samples['oxEff'].mean(0)
+key = random.PRNGKey(0)
+key, key_ = random.split(key)
 
-To study the effects of covariates, one can inspect the coefficient matrix **B**. For instance, we can assess differential methylation by studying **B** as described in the next section.
+# run LuxGLM
+lux_result = run_nuts(
+    key,
+    lux_input_data,
+    ["basal/tgf-beta"],
+    num_warmup=1_000,
+    num_samples=1_000,
+    num_chains=4,
+)
 
-#### Estimation of Bayes factors using Savage-Dickey density ratio
-Savage-Dickey density ratio is implemented by the *savagedickey* routine in **lux_routines.py**.
+# ensure convergence
+lux_result.inference_metrics["summary"].query("r_hat > 1.05")
+```
 
-To demonstrate this let us consider a simple example of two conditions and six samples (three for each condition).
-In this case, the design matrix input file would contain (assuming that the first three samples would correspond to the first condition)
->1\t0<br>
->1\t0<br>
->1\t0<br>
->0\t1<br>
->0\t1<br>
->0\t1
+To get the posterior samples of methylation levels of control and non-control cytosines one can call `lux_result.methylation_controls()` and `lux_result.methylation()`, respectively.
 
-To assess whether the methylation status differs between the two conditions, we should study the estimated coefficient matrix **B**.
-In more detail, we can call the *savagedickey* routine to compare the coefficients of the first and second covariates (remember that Y=DB and θ=softmax(Y))
+The posterior samples of experimental parameters can be obtained by calling `lux_result.experimental_parameters()`.
 
-    >>> from luxglm_routines import savagedickey
-    >>> print savagedickey(samples['B'][:,0,:],samples['B'][:,1,:])
+To study the effects of the covariates, one can get the posterior samples of coefficients of covariates using `lux_result.coefficients()`.
 
-The routine will return a Savage-Dickey approximation of the Bayes factor.
+### Examples
 
-## Examples
-Two examples from the manuscript (**foxp3_time.py** and **foxp3_ra.py**) are provided. The scripts **foxp3_time.py** and **foxp3_ra.py** are modified from **luxglm<span></span>.py** to consider only subsets of our *Foxp3* data. These examples can be run as follows
+Please see the [examples](examples/) directory for the tutorial notebooks.
 
-    $ python foxp3_time.py -c Data/control_data.txt -p Data/control_prior.txt -d Data/data.txt -m Data/design_matrix.txt
-    $ python foxp3_ra.py -c Data/control_data.txt -p Data/control_prior.txt -d Data/data.txt -m Data/design_matrix.txt
+## References
 
-Please check **Data/control_data.txt**, **Data/control_prior.txt**, **Data/data.txt**, and **Data/design_matrix.txt** for input file examples. 
-
-References
--------------
 [1] T. Äijö, X. Yue, A. Rao and H. Lähdesmäki, “LuxGLM: a probabilistic covariate model for quantification of DNA methylation modifications with complex experimental designs.,” Bioinformatics, 32.17:i511-i519, Sep 2016.
 
 [2] T. Äijö, Y. Huang, H. Mannerström, L. Chavez, A. Tsagaratou, A. Rao and H. Lähdesmäki, “A probabilistic generative model for quantification of DNA modifications enables analysis of demethylation pathways.,” Genome Biol, 17.1:1, Mar 2016.
 
-[3] F. Krueger and S. R. Andrews, “Bismark: a flexible aligner and methylation caller for Bisulfite-Seq applications.,” Bioinformatics, 27.11:1571-1572, Jun 2011. 
+[3] F. Krueger and S. R. Andrews, “Bismark: a flexible aligner and methylation caller for Bisulfite-Seq applications.,” Bioinformatics, 27.11:1571-1572, Jun 2011.
 
-[4] K. D. Hansen, B. Langmead and R. A. Irizarry, “BSmooth: from whole genome bisulfite sequencing reads to differentially methylated regions.,” Genome Biol, 13.10:1, Oct 2012. 
+[4] K. D. Hansen, B. Langmead and R. A. Irizarry, “BSmooth: from whole genome bisulfite sequencing reads to differentially methylated regions.,” Genome Biol, 13.10:1, Oct 2012.
 
-[5] Stan Development Team, “Stan Modeling Language Users Guide and Reference Manual, Version 2.14.0.,” http://mc-stan.org, Jan 2016. 
-
-[6] Stan Development Team, “PyStan: the Python interface to Stan, Version 2.14.0.0.,” http://mc-stan.org, Jan 2016.
+[5] D. Phan, N. Pradhan and M. Jankowiak, “Composable Effects for Flexible and Accelerated Probabilistic Programming in NumPyro.,” arXiv preprint 1912.11554, Dec 2019.
