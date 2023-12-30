@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 from jax import random
 from luxglm.dataclasses import LuxInputData
-from luxglm.inference import run_nuts
+from luxglm.inference import run_nuts, run_svi
 
 numpyro.enable_x64()
 
@@ -233,6 +233,133 @@ def test_run_nuts(
         num_samples=100,
         num_chains=4,
         two_steps_inference=two_steps_inference,
+    )
+
+    # experimental parameters
+    experimental_parameters_df = lux_result.experimental_parameters()
+    assert np.all(
+        experimental_parameters_df.query("parameter == 'bs_eff'").mean(1)
+        > HIGH_EXPERIMENTAL_PARAMETER_VALUE
+    )
+    assert np.all(
+        experimental_parameters_df.query("parameter == 'inaccurate_bs_eff'").mean(1)
+        < LOW_EXPERIMENTAL_PARAMETER_VALUE
+    )
+    assert np.all(
+        experimental_parameters_df.query("parameter == 'ox_eff'").mean(1)
+        > HIGH_EXPERIMENTAL_PARAMETER_VALUE
+    )
+    assert np.all(
+        experimental_parameters_df.query("parameter == 'seq_err'").mean(1)
+        < LOW_EXPERIMENTAL_PARAMETER_VALUE
+    )
+
+    # methylation
+    methylation_df = lux_result.methylation()
+    for (sample, chromosome, position), modifications in expected.items():  # noqa: PERF102, B007
+        methylation_subset_df = methylation_df.query(
+            "sample == @sample and chromosome == @chromosome and position == @position"
+        )
+        for modification, value in modifications.items():  # noqa: PERF102, B007
+            assert np.all(
+                methylation_subset_df.query("modification == @modification").mean(1)
+                > value
+                if value == HIGH_EXPERIMENTAL_PARAMETER_VALUE
+                else methylation_subset_df.query("modification == @modification").mean(
+                    1
+                )
+                < value
+            )
+
+
+@pytest.mark.parametrize(
+    ("covariates", "expected"),
+    [
+        (
+            ["basal", "dko"],
+            {
+                ("sample_1", "chr1", 1): {
+                    "C": HIGH_EXPERIMENTAL_PARAMETER_VALUE,
+                    "5mC": LOW_EXPERIMENTAL_PARAMETER_VALUE,
+                    "5hmC": LOW_EXPERIMENTAL_PARAMETER_VALUE,
+                },
+                ("sample_2", "chr1", 1): {
+                    "C": LOW_EXPERIMENTAL_PARAMETER_VALUE,
+                    "5mC": HIGH_EXPERIMENTAL_PARAMETER_VALUE,
+                    "5hmC": LOW_EXPERIMENTAL_PARAMETER_VALUE,
+                },
+                ("sample_1", "chr2", 1): {
+                    "C": LOW_EXPERIMENTAL_PARAMETER_VALUE,
+                    "5mC": HIGH_EXPERIMENTAL_PARAMETER_VALUE,
+                    "5hmC": LOW_EXPERIMENTAL_PARAMETER_VALUE,
+                },
+                ("sample_2", "chr2", 1): {
+                    "C": HIGH_EXPERIMENTAL_PARAMETER_VALUE,
+                    "5mC": LOW_EXPERIMENTAL_PARAMETER_VALUE,
+                    "5hmC": LOW_EXPERIMENTAL_PARAMETER_VALUE,
+                },
+                ("sample_1", "chr3", 1): {
+                    "C": LOW_EXPERIMENTAL_PARAMETER_VALUE,
+                    "5mC": HIGH_EXPERIMENTAL_PARAMETER_VALUE,
+                    "5hmC": LOW_EXPERIMENTAL_PARAMETER_VALUE,
+                },
+                ("sample_2", "chr3", 1): {
+                    "C": LOW_EXPERIMENTAL_PARAMETER_VALUE,
+                    "5mC": LOW_EXPERIMENTAL_PARAMETER_VALUE,
+                    "5hmC": HIGH_EXPERIMENTAL_PARAMETER_VALUE,
+                },
+            },
+        ),
+        (
+            ["basal"],
+            {
+                ("sample_1", "chr1", 1): {
+                    "C": HIGH_EXPERIMENTAL_PARAMETER_VALUE,
+                    "5mC": LOW_EXPERIMENTAL_PARAMETER_VALUE,
+                    "5hmC": LOW_EXPERIMENTAL_PARAMETER_VALUE,
+                },
+                ("sample_2", "chr1", 1): {
+                    "C": LOW_EXPERIMENTAL_PARAMETER_VALUE,
+                    "5mC": HIGH_EXPERIMENTAL_PARAMETER_VALUE,
+                    "5hmC": LOW_EXPERIMENTAL_PARAMETER_VALUE,
+                },
+                ("sample_1", "chr2", 1): {
+                    "C": LOW_EXPERIMENTAL_PARAMETER_VALUE,
+                    "5mC": HIGH_EXPERIMENTAL_PARAMETER_VALUE,
+                    "5hmC": LOW_EXPERIMENTAL_PARAMETER_VALUE,
+                },
+                ("sample_2", "chr2", 1): {
+                    "C": HIGH_EXPERIMENTAL_PARAMETER_VALUE,
+                    "5mC": LOW_EXPERIMENTAL_PARAMETER_VALUE,
+                    "5hmC": LOW_EXPERIMENTAL_PARAMETER_VALUE,
+                },
+                ("sample_1", "chr3", 1): {
+                    "C": LOW_EXPERIMENTAL_PARAMETER_VALUE,
+                    "5mC": HIGH_EXPERIMENTAL_PARAMETER_VALUE,
+                    "5hmC": LOW_EXPERIMENTAL_PARAMETER_VALUE,
+                },
+                ("sample_2", "chr3", 1): {
+                    "C": LOW_EXPERIMENTAL_PARAMETER_VALUE,
+                    "5mC": LOW_EXPERIMENTAL_PARAMETER_VALUE,
+                    "5hmC": HIGH_EXPERIMENTAL_PARAMETER_VALUE,
+                },
+            },
+        ),
+    ],
+)
+def test_run_svi(
+    luxinputdata: LuxInputData,
+    covariates: list[str],
+    expected: dict[tuple[str, str, int], dict[str, float]],
+) -> None:
+    """Test run_svi()."""
+    key = random.PRNGKey(0)
+    lux_result = run_svi(
+        key,
+        luxinputdata,
+        covariates,
+        num_steps=5_000,
+        num_samples=100,
     )
 
     # experimental parameters

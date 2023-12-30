@@ -259,12 +259,17 @@ def luxglm_bs_oxbs_model(
 
     sigma_epsilon = numpyro.sample("sigma_y", dist.HalfNormal(1))
 
-    with numpyro.plate("modifications", num_modifications - 1):
-        with numpyro.plate("cytosines", num_cytosines):
-            with numpyro.plate("predictors", num_predictors):
-                b = numpyro.sample("b", dist.Normal(0, 1))
-            with numpyro.plate("samples", num_samples):
-                epsilon_raw = numpyro.sample("epsilon_raw", dist.Normal(0, 1))
+    b = numpyro.sample(
+        "b",
+        dist.Normal(0, 1).expand(
+            (num_predictors, num_cytosines, num_modifications - 1)
+        ),
+    )
+
+    epsilon_raw = numpyro.sample(
+        "epsilon_raw",
+        dist.Normal(0, 1).expand((num_samples, num_cytosines, num_modifications - 1)),
+    )
 
     y = jnp.einsum("ik,klm->ilm", design_matrix, b) + sigma_epsilon * epsilon_raw
     theta = numpyro.deterministic(
@@ -369,12 +374,17 @@ def luxglm_bs_oxbs_two_step_noncontrol_model(
 
     sigma_epsilon = numpyro.sample("sigma_y", dist.HalfNormal(1))
 
-    with numpyro.plate("modifications", num_modifications - 1):
-        with numpyro.plate("cytosines", num_cytosines):
-            with numpyro.plate("predictors", num_predictors):
-                b = numpyro.sample("b", dist.Normal(0, 1))
-            with numpyro.plate("samples", num_samples):
-                epsilon_raw = numpyro.sample("epsilon_raw", dist.Normal(0, 1))
+    b = numpyro.sample(
+        "b",
+        dist.Normal(0, 1).expand(
+            (num_predictors, num_cytosines, num_modifications - 1)
+        ),
+    )
+
+    epsilon_raw = numpyro.sample(
+        "epsilon_raw",
+        dist.Normal(0, 1).expand((num_samples, num_cytosines, num_modifications - 1)),
+    )
 
     y = jnp.einsum("ik,klm->ilm", design_matrix, b) + sigma_epsilon * epsilon_raw
     theta = numpyro.deterministic(

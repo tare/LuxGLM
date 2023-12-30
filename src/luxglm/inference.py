@@ -3,10 +3,10 @@ from typing import Callable
 
 from jax import Array, random
 from jax.tree_util import tree_map
-from numpyro.infer import MCMC, NUTS, SVI, HMCGibbs, Trace_ELBO
-from numpyro.infer.autoguide import AutoNormal
+from numpyro.infer import ELBO, MCMC, NUTS, SVI, HMCGibbs, Trace_ELBO
+from numpyro.infer.autoguide import AutoGuide, AutoNormal
 from numpyro.infer.initialization import init_to_sample
-from numpyro.optim import Adam
+from numpyro.optim import Adam, _NumPyroOptim
 
 from luxglm.dataclasses import LuxInputData, LuxResult
 from luxglm.models import (
@@ -178,9 +178,12 @@ def run_svi(
     key: KeyArray,
     lux_input_data: LuxInputData,
     covariates: list[str],
+    guide: AutoGuide | None = None,
+    optim: _NumPyroOptim | None = None,
+    loss: ELBO | None = None,
     num_steps: int = 10_000,
     num_samples: int = 1_000,
-) -> dict[str, Array]:
+) -> LuxResult:
     """TBA."""
     data = lux_input_data.get_data(covariates)
 
@@ -198,15 +201,16 @@ def run_svi(
 
     design_matrix = data.design_matrix.astype(float)
 
-    guide = AutoNormal(luxglm_bs_oxbs_model, init_loc_fn=init_to_sample)
-    optimizer = Adam(step_size=1)
-    svi = SVI(luxglm_bs_oxbs_model, guide, optimizer, loss=Trace_ELBO())
+    guide = guide or AutoNormal(luxglm_bs_oxbs_model)
+    optim = optim or Adam(step_size=1e-1)
+    loss = loss or Trace_ELBO(num_particles=10)
+    svi = SVI(luxglm_bs_oxbs_model, guide, optim, loss=loss)
 
     key, key_ = random.split(key, 2)
     svi_result = svi.run(
         key_,
         num_steps,
-        design_matrix=design_matrix,
+        design_matrix,
         bs_c=bs_c,
         bs_total=bs_total,
         oxbs_c=oxbs_c,
@@ -220,4 +224,15 @@ def run_svi(
     params = svi_result.params
 
     key, key_ = random.split(key, 2)
-    return guide.sample_posterior(key_, params, (num_samples,))
+    posterior_samples = guide.sample_posterior(key_, params, (num_samples,))
+
+    inference_metrics = {"params": params, "losses": svi_result.losses}
+
+    return LuxResult(
+        lux_input_data.metadata_df.name.tolist(),
+        covariates,
+        inference_metrics,
+        lux_input_data.count_df.index.tolist(),
+        lux_input_data.control_count_df.index.tolist(),
+        posterior_samples,
+    )
