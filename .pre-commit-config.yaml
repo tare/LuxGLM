@@ -6,8 +6,10 @@ repos:
     rev: v4.4.0
     hooks:
       - id: trailing-whitespace
+        exclude: "^LuxRep"
       - id: end-of-file-fixer
         exclude_types: [json, binary]
+        exclude: "^LuxRep"
       - id: mixed-line-ending
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.1.9
