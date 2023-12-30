@@ -5,7 +5,7 @@ from jax import Array, random
 from jax.tree_util import tree_map
 from numpyro.infer import ELBO, MCMC, NUTS, SVI, HMCGibbs, Trace_ELBO
 from numpyro.infer.autoguide import AutoGuide, AutoNormal
-from numpyro.infer.initialization import init_to_sample
+from numpyro.infer.initialization import init_to_mean, init_to_sample
 from numpyro.optim import Adam, _NumPyroOptim
 
 from luxglm.dataclasses import LuxInputData, LuxResult
@@ -201,7 +201,7 @@ def run_svi(
 
     design_matrix = data.design_matrix.astype(float)
 
-    guide = guide or AutoNormal(luxglm_bs_oxbs_model)
+    guide = guide or AutoNormal(luxglm_bs_oxbs_model, init_loc_fn=init_to_mean)
     optim = optim or Adam(step_size=1e-1)
     loss = loss or Trace_ELBO(num_particles=10)
     svi = SVI(luxglm_bs_oxbs_model, guide, optim, loss=loss)
