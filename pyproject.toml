@@ -100,6 +100,11 @@ ignore = [
     "ISC001",  # https://docs.astral.sh/ruff/rules/#flake8-implicit-str-concat-isc
     "UP034",  # https://docs.astral.sh/ruff/rules/extraneous-parentheses/
 ]
+exclude = ["LuxRep/"]
+force-exclude = true
+
+[tool.ruff.format]
+exclude = ["LuxRep/"]
 
 [tool.ruff.lint]
 preview = true
