@@ -13,7 +13,17 @@ NORMAL_APPROXIMATION_N = 500
 def get_p_bs_c(
     theta: Array, bs_eff: Array, inaccurate_bs_eff: Array, seq_err: Array
 ) -> Array:
-    """TBA."""
+    """Calculate p_bs(C|theta, experimental parameters).
+
+    Args:
+        theta: Methylation level parameter.
+        bs_eff: Bisulfite conversion rate parameter.
+        inaccurate_bs_eff: Inaccurate bisulphite conversion rate parameter.
+        seq_err: Sequencing error rate parameter.
+
+    Returns:
+        Probability of C.
+    """
     return (
         theta[..., 0] * ((1.0 - seq_err) * (1.0 - bs_eff) + seq_err * bs_eff)
         + theta[..., 1]
@@ -30,7 +40,18 @@ def get_p_oxbs_c(
     ox_eff: Array,
     seq_err: Array,
 ) -> Array:
-    """TBA."""
+    """Calculate p_oxbs(C|theta, experimental parameters).
+
+    Args:
+        theta: Methylation level parameter.
+        bs_eff: Bisulfite conversion rate parameter.
+        inaccurate_bs_eff: Inaccurate bisulphite conversion rate parameter.
+        ox_eff: Oxidation efficiency rate parameter.
+        seq_err: Sequencing error rate parameter.
+
+    Returns:
+        Probability of C.
+    """
     return (
         theta[..., 0] * ((1.0 - seq_err) * (1.0 - bs_eff) + seq_err * bs_eff)
         + theta[..., 1]
@@ -48,7 +69,14 @@ def get_p_oxbs_c(
 
 
 def get_experimental_parameters(num_samples: int) -> tuple[Array, Array, Array, Array]:
-    """TBA."""
+    """Generative model of experimental parameters.
+
+    Args:
+        num_samples: Number of samples.
+
+    Returns:
+        Following rate parameters: bs_eff, inaccurate_bs_eff, ox_eff, and seq_err.
+    """
     mu_mu_bs_eff, sigma_mu_bs_eff = 2, 1.29
     mu_sigma_bs_eff, sigma_sigma_bs_eff = 0.4, 0.5
 
@@ -123,7 +151,17 @@ def bs_likelihood(
     theta: Array,
     use_normal_approximation: bool = False,
 ) -> None:
-    """TBA."""
+    """Bisulphite sequencing likelihood.
+
+    Args:
+        bs_total: Number of C or T read-outs.
+        bs_c: Number of C read-outs.
+        bs_eff: Bisulfite conversion rate parameter.
+        inaccurate_bs_eff: Inaccurate bisulphite conversion rate parameter.
+        seq_err: Sequencing error rate parameter.
+        theta: Methylation level parameter.
+        use_normal_approximation: Whether to use normal approximation of Binomial. Defaults to False.
+    """
     if use_normal_approximation:
         with numpyro.handlers.mask(mask=bs_total <= NORMAL_APPROXIMATION_N):
             numpyro.sample(
@@ -168,7 +206,18 @@ def oxbs_likelihood(
     theta: Array,
     use_normal_approximation: bool = False,
 ) -> None:
-    """TBA."""
+    """Oxidative bisulphite sequencing likelihood.
+
+    Args:
+        oxbs_total: Number of C or T read-outs.
+        oxbs_c: Number of C read-outs.
+        bs_eff: Bisulfite conversion rate parameter.
+        inaccurate_bs_eff: Inaccurate bisulphite conversion rate parameter.
+        ox_eff: Oxidation efficiency rate parameter.
+        seq_err: Sequencing error rate parameter.
+        theta: Methylation level parameter.
+        use_normal_approximation: Whether to use normal approximation of Binomial. Defaults to False.
+    """
     if use_normal_approximation:
         with numpyro.handlers.mask(mask=oxbs_total <= NORMAL_APPROXIMATION_N):
             numpyro.sample(
@@ -224,7 +273,21 @@ def luxglm_bs_oxbs_model(
     alpha_control: Array,
     use_normal_approximation: bool = False,
 ) -> None:
-    """LuxGLM model."""
+    """LuxGLM BS/oxBS model.
+
+    Args:
+        design_matrix: Design matrix.
+        bs_c: Number of C read-outs from BS-seq for non-control cytosines.
+        bs_total: Number of total read-outs from BS-seq for non-control cytosines.
+        oxbs_c: Number of C read-outs from oxBS-seq for non-control cytosines.
+        oxbs_total: Number of total read-outs from oxBS-seq for non-control cytosines.
+        bs_c_control: Number of C read-outs from BS-seq for control cytosines.
+        bs_total_control: Number of total read-outs from BS-seq for control cytosines.
+        oxbs_c_control: Number of C read-outs from oxBS-seq for control cytosines.
+        oxbs_total_control: Number of total read-outs from oxBS-seq for control cytosines.
+        alpha_control: Pseudocounts for priors of control cytosine.
+        use_normal_approximation: Whether to use normal approximation of Binomial. Defaults to False.
+    """
     num_samples = bs_c.shape[-2]
     num_predictors = design_matrix.shape[-1]
     num_modifications = 3
@@ -309,7 +372,18 @@ def luxglm_bs_oxbs_two_step_control_model(
     alpha_control: Array,
     use_normal_approximation: bool = False,
 ) -> None:
-    """LuxGLM model."""
+    """LuxGLM BS/oxBS model.
+
+    This model is used to estimate the posterior distributions of experimental parameters.
+
+    Args:
+        bs_c_control: Number of C read-outs from BS-seq for control cytosines.
+        bs_total_control: Number of total read-outs from BS-seq for control cytosines.
+        oxbs_c_control: Number of C read-outs from oxBS-seq for control cytosines.
+        oxbs_total_control: Number of total read-outs from oxBS-seq for control cytosines.
+        alpha_control: Pseudocounts for priors of control cytosine.
+        use_normal_approximation: Whether to use normal approximation of Binomial. Defaults to False.
+    """
     num_samples = bs_c_control.shape[-2]
 
     bs_eff, inaccurate_bs_eff, ox_eff, seq_err = get_experimental_parameters(
@@ -348,7 +422,18 @@ def luxglm_bs_oxbs_two_step_noncontrol_model(
     oxbs_total: Array,
     use_normal_approximation: bool = False,
 ) -> None:
-    """LuxGLM model."""
+    """LuxGLM BS/oxBS model.
+
+    This model requires that the posterior distributions of experimental parameters has been estimated beforehand.
+
+    Args:
+        design_matrix: Design matrix.
+        bs_c: Number of C read-outs from BS-seq for non-control cytosines.
+        bs_total: Number of total read-outs from BS-seq for non-control cytosines.
+        oxbs_c: Number of C read-outs from oxBS-seq for non-control cytosines.
+        oxbs_total: Number of total read-outs from oxBS-seq for non-control cytosines.
+        use_normal_approximation: Whether to use normal approximation of Binomial. Defaults to False.
+    """
     num_samples = bs_c.shape[-2]
     num_predictors = design_matrix.shape[-1]
     num_modifications = 3

@@ -12,7 +12,21 @@ from jax import Array
 
 @dataclass
 class LuxModelData:
-    """TBA."""
+    """Model data.
+
+    Args:
+        bs_c: Number of C read-outs from BS-seq for non-control cytosines.
+        bs_total: Number of total read-outs from BS-seq for non-control cytosines.
+        oxbs_c: Number of C read-outs from oxBS-seq for non-control cytosines.
+        oxbs_total: Number of total read-outs from oxBS-seq for non-control cytosines.
+        bs_c_control: Number of C read-outs from BS-seq for control cytosines.
+        bs_total_control: Number of total read-outs from BS-seq for control cytosines.
+        oxbs_c_control: Number of C read-outs from oxBS-seq for control cytosines.
+        oxbs_total_control: Number of total read-outs from oxBS-seq for control cytosines.
+        alpha_control: Pseudocounts for priors of control cytosine.
+        design_matrix: Design matrix.
+        covariates: List of covariates of interest.
+    """
 
     bs_c: npt.NDArray[np.int_]
     bs_total: npt.NDArray[np.int_]
@@ -29,7 +43,14 @@ class LuxModelData:
 
 @dataclass
 class LuxInputData:
-    """TBA."""
+    """Model data.
+
+    Args:
+        metadata_df: Metadata dataframe.
+        count_df: Non-control counts dataframe.
+        control_count_df: Control counts dataframe.
+        control_definition_df: Control definition dataframe.
+    """
 
     metadata_df: pd.DataFrame
     count_df: pd.DataFrame
@@ -37,7 +58,14 @@ class LuxInputData:
     control_definition_df: pd.DataFrame
 
     def get_data(self, covariates: list[str]) -> LuxModelData:
-        """TBA."""
+        """Get model data.
+
+        Args:
+            covariates: List of covariates of interest.
+
+        Returns:
+            LuxModelData object.
+        """
 
         def helper(name: str) -> LuxModelData:
             bs_c = self.count_df[name].bs_c
@@ -96,7 +124,16 @@ class LuxInputData:
 
 @dataclass
 class LuxResult:
-    """TBA."""
+    """Model results.
+
+    Args:
+        samples: List of sample names.
+        covariates: List of covariates of interest.
+        inference_metrics: Metrics related to inference.
+        positions: Position information of non-control cytosines.
+        control_positions: Position information of control cytosines.
+        posterior_samples: Posterior samples.
+    """
 
     samples: list[str]
     covariates: list[str]
@@ -106,7 +143,7 @@ class LuxResult:
     posterior_samples: dict[str, Array]
 
     def methylation(self) -> pd.DataFrame:
-        """TBA."""
+        """Posterior samples of methylation levels of non-control cytosines."""
         (
             num_posterior_samples,
             num_samples,
@@ -134,7 +171,7 @@ class LuxResult:
         )
 
     def methylation_controls(self) -> pd.DataFrame:
-        """TBA."""
+        """Posterior samples of methylation levels of control cytosines."""
         (
             num_posterior_samples,
             num_samples,
@@ -168,7 +205,7 @@ class LuxResult:
         )
 
     def experimental_parameters(self) -> pd.DataFrame:
-        """TBA."""
+        """Posterior samples of experimental parameters."""
         num_posterior_samples, num_samples, _ = self.posterior_samples["bs_eff"].shape
         experimental_parameters = ("bs_eff", "inaccurate_bs_eff", "ox_eff", "seq_err")
         num_experimental_parameters = len(experimental_parameters)
@@ -193,7 +230,7 @@ class LuxResult:
         )
 
     def coefficients(self) -> pd.DataFrame:
-        """TBA."""
+        """Posterior samples of coefficients."""
         (
             num_posterior_samples,
             num_covariates,

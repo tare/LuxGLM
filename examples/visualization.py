@@ -9,7 +9,14 @@ from matplotlib.figure import Figure
 
 
 def plot_experimental_parameters(lux_result: LuxResult) -> Figure:
-    """TBA."""
+    """Visualize posterior distributions of experimental parameters.
+
+    Args:
+        lux_result: LuxResult object.
+
+    Returns:
+        Matplotlib figure object.
+    """
     fig = plt.figure()
 
     fig.set_size_inches(6, 4)
@@ -39,7 +46,14 @@ def plot_experimental_parameters(lux_result: LuxResult) -> Figure:
 
 
 def plot_methylation_levels(lux_result: LuxResult) -> Figure:
-    """TBA."""
+    """Visualize posterior distributions of methylation levels.
+
+    Args:
+        lux_result: LuxResult object.
+
+    Returns:
+        Matplotlib figure object.
+    """
     fig = plt.figure()
 
     methylation_df = lux_result.methylation()
@@ -102,7 +116,14 @@ def plot_methylation_levels(lux_result: LuxResult) -> Figure:
 
 
 def plot_coefficients(lux_result: LuxResult) -> Figure:
-    """TBA."""
+    """Visualize posterior distributions of coefficients.
+
+    Args:
+        lux_result: LuxResult object.
+
+    Returns:
+        Matplotlib figure object.
+    """
     fig = plt.figure()
 
     coefficients_df = lux_result.coefficients()

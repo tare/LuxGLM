@@ -24,7 +24,16 @@ KeyArray = Array
 def get_gibbs_fn(
     posterior_samples: dict[str, Array],
 ) -> Callable[[KeyArray, list[str], list[str]], dict[str, Array]]:
-    """TBA."""
+    """Get gibbs_fn() to be used with HMCGibbs().
+
+    This can be used for introducing unlearnable distributions in the model.
+
+    Args:
+        posterior_samples: Posterior samples of the parameters of interest.
+
+    Returns:
+        Function that returns a sample from the set of posterior samples.
+    """
     num_samples = posterior_samples[next(iter(posterior_samples.keys()))].shape[0]
 
     def gibbs_fn(
@@ -51,12 +60,15 @@ def run_nuts(
 
     Args:
         key: PRNGKey.
-        lux_input_data: TBA.
-        covariates: TBA.
+        lux_input_data: Lux input data..
+        covariates: List of covariates of interest.
         two_steps_inference: TBA. Defaults to False.
         num_warmup: Number of warmup iterations. Defaults to 1000.
         num_samples: Number of sampling iterations. Defaults to 1000.
         num_chains: Number of chains. Defaults to 4.
+
+    Returns:
+        LuxResult object.
     """
     data = lux_input_data.get_data(covariates)
 
@@ -184,7 +196,21 @@ def run_svi(
     num_steps: int = 10_000,
     num_samples: int = 1_000,
 ) -> LuxResult:
-    """TBA."""
+    """Run SVI.
+
+    Args:
+        key: PRNGKey.
+        lux_input_data: Lux input data..
+        covariates: List of covariates of interest.
+        guide: Automatic guide. Defaults to `AutoNormal(luxglm_bs_oxbs_model, init_loc_fn=init_to_mean)`.
+        optim: Optimizer. Defaults to `numpyro.optim.Adam(step.size=1e-1)`.
+        loss: Loss function. Defaults to `Trace_ELBO(num_particles=10)`.
+        num_steps: Number of optimization steps. Defaults to 10_000.
+        num_samples: Number of samples from the guide. Defaults to 1_000.
+
+    Returns:
+        LuxResult object.
+    """
     data = lux_input_data.get_data(covariates)
 
     bs_c = data.bs_c
