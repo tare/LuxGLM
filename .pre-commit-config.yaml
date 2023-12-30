@@ -10,7 +10,7 @@ repos:
         exclude_types: [json, binary]
       - id: mixed-line-ending
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.1.7
+    rev: v0.1.9
     hooks:
       - id: ruff
         types_or: [python, pyi, jupyter]
