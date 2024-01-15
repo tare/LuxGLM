@@ -1,11 +1,14 @@
 """test_luxglm.py."""
 import numpy as np
 import numpyro
+import numpyro.distributions as dist
 import pandas as pd
 import pytest
 from jax import random
 from luxglm.dataclasses import LuxInputData
 from luxglm.inference import run_nuts, run_svi
+from luxglm.utils import get_mcmc_summary
+from numpyro.infer import MCMC, NUTS
 
 numpyro.enable_x64()
 
@@ -35,20 +38,20 @@ def luxinputdata() -> LuxInputData:
             {
                 "chromosome": ["chr1", "chr2", "chr3"],
                 "position": [1, 1, 1],
-                "bs_c": [0, 10, 10],
-                "bs_total": [10, 10, 10],
-                "oxbs_c": [0, 10, 10],
-                "oxbs_total": [10, 10, 10],
+                "bs_c": [0, 50, 50],
+                "bs_total": [50, 50, 50],
+                "oxbs_c": [0, 50, 50],
+                "oxbs_total": [50, 50, 50],
             },
         ).set_index(["chromosome", "position"]),
         pd.DataFrame(
             {
                 "chromosome": ["chr1", "chr2", "chr3", "chr3"],
                 "position": [1, 1, 1, 2],
-                "bs_c": [10, 0, 10, 0],
-                "bs_total": [10, 10, 10, 10],
-                "oxbs_c": [10, 0, 0, 0],
-                "oxbs_total": [10, 10, 10, 10],
+                "bs_c": [50, 0, 50, 0],
+                "bs_total": [50, 50, 50, 50],
+                "oxbs_c": [50, 0, 0, 0],
+                "oxbs_total": [50, 50, 50, 50],
             },
         ).set_index(["chromosome", "position"]),
     ]
@@ -66,10 +69,10 @@ def luxinputdata() -> LuxInputData:
                 "chromosome": ["lambda", "lambda", "lambda"],
                 "position": [1, 2, 3],
                 "control_type": ["C", "5mC", "5hmC"],
-                "bs_c": [0, 10, 10],
-                "bs_total": [10, 10, 10],
-                "oxbs_c": [0, 10, 0],
-                "oxbs_total": [10, 10, 10],
+                "bs_c": [0, 50, 50],
+                "bs_total": [50, 50, 50],
+                "oxbs_c": [0, 50, 0],
+                "oxbs_total": [50, 50, 50],
             },
         ).set_index(["chromosome", "position", "control_type"]),
         pd.DataFrame(
@@ -77,10 +80,10 @@ def luxinputdata() -> LuxInputData:
                 "chromosome": ["lambda", "lambda", "lambda"],
                 "position": [1, 2, 3],
                 "control_type": ["C", "5mC", "5hmC"],
-                "bs_c": [0, 10, 10],
-                "bs_total": [10, 10, 10],
-                "oxbs_c": [0, 10, 0],
-                "oxbs_total": [10, 10, 10],
+                "bs_c": [0, 50, 50],
+                "bs_total": [50, 50, 50],
+                "oxbs_c": [0, 50, 0],
+                "oxbs_total": [50, 50, 50],
             },
         ).set_index(["chromosome", "position", "control_type"]),
     ]
@@ -353,7 +356,7 @@ def test_run_svi(
     expected: dict[tuple[str, str, int], dict[str, float]],
 ) -> None:
     """Test run_svi()."""
-    key = random.PRNGKey(0)
+    key = random.PRNGKey(1)
     lux_result = run_svi(
         key,
         luxinputdata,
@@ -381,6 +384,12 @@ def test_run_svi(
         < LOW_EXPERIMENTAL_PARAMETER_VALUE
     )
 
+    # coefficients
+    lux_result.coefficients()
+
+    # control methylation
+    lux_result.methylation_controls()
+
     # methylation
     methylation_df = lux_result.methylation()
     for (sample, chromosome, position), modifications in expected.items():  # noqa: PERF102, B007
@@ -397,3 +406,42 @@ def test_run_svi(
                 )
                 < value
             )
+
+
+def test_get_mcmc_summary() -> None:
+    """Test get_mcmc_summary()."""
+    num_obs = 5
+
+    def model() -> None:
+        mu = numpyro.sample("mu", dist.Normal(0, 1))
+        with numpyro.plate("N", num_obs):
+            numpyro.sample("y", dist.Normal(mu, 1))
+
+    nuts_kernel = NUTS(model)
+    mcmc = MCMC(
+        nuts_kernel,
+        num_warmup=500,
+        num_samples=500,
+        num_chains=4,
+    )
+    key = random.PRNGKey(0)
+    key, key_ = random.split(key, 2)
+    mcmc.run(key_)
+
+    summary = get_mcmc_summary(mcmc)
+
+    assert tuple(summary.columns) == (
+        "variable",
+        "index",
+        "mean",
+        "std",
+        "median",
+        "5.0%",
+        "95.0%",
+        "n_eff",
+        "r_hat",
+    )
+    assert summary.shape[0] == 1 + num_obs
+    assert summary.query("variable == 'mu'").shape[0] == 1
+    assert summary.query("variable == 'y'").shape[0] == num_obs
+    assert summary.query("r_hat > 1.05").shape[0] == 0

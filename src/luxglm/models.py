@@ -7,8 +7,6 @@ from jax.nn import sigmoid, softmax
 
 # ruff: noqa: SIM117, PLR0913, PLR0914, PLR0915, PLR0917
 
-NORMAL_APPROXIMATION_N = 500
-
 
 def get_p_bs_c(
     theta: Array, bs_eff: Array, inaccurate_bs_eff: Array, seq_err: Array
@@ -68,78 +66,41 @@ def get_p_oxbs_c(
     )
 
 
-def get_experimental_parameters(num_samples: int) -> tuple[Array, Array, Array, Array]:
-    """Generative model of experimental parameters.
+def get_experimental_parameter(
+    name: str,
+    num_samples: int,
+    mu_mu: float,
+    sigma_mu: float,
+    mu_sigma: float,
+    sigma_sigma: float,
+) -> Array:
+    """Generative model of experimental parameter.
+
+    mu ~ Normal(mu_mu, sigma_mu),
+    sigma ~ LogNormal(mu_sigma, sigma_sigma),
+    raw ~ Normal(0, 1),
+    param = sigmoid(mu+sigma*raw)
+
 
     Args:
+        name: Name of the experimental parameter.
         num_samples: Number of samples.
+        mu_mu: Mean of the mean.
+        sigma_mu: Scale of the mean.
+        mu_sigma: Mean of the scale.
+        sigma_sigma: Scale of the scale.
 
     Returns:
-        Following rate parameters: bs_eff, inaccurate_bs_eff, ox_eff, and seq_err.
+        Experimental parameter.
     """
-    mu_mu_bs_eff, sigma_mu_bs_eff = 2, 1.29
-    mu_sigma_bs_eff, sigma_sigma_bs_eff = 0.4, 0.5
-
-    mu_mu_inaccurate_bs_eff, sigma_mu_inaccurate_bs_eff = -3, 1.29
-    mu_sigma_inaccurate_bs_eff, sigma_sigma_inaccurate_bs_eff = 0.4, 0.5
-
-    mu_mu_ox_eff, sigma_mu_ox_eff = 2, 1.29
-    mu_sigma_ox_eff, sigma_sigma_ox_eff = 0.4, 0.5
-
-    mu_mu_seq_err, sigma_mu_seq_err = -3, 1.29
-    mu_sigma_seq_err, sigma_sigma_seq_err = 0.4, 0.5
-
-    mu_bs_eff = numpyro.sample("mu_bs_eff", dist.Normal(mu_mu_bs_eff, sigma_mu_bs_eff))
-    sigma_bs_eff = numpyro.sample(
-        "sigma_bs_eff", dist.LogNormal(mu_sigma_bs_eff, sigma_sigma_bs_eff)
-    )
-
-    mu_inaccurate_bs_eff = numpyro.sample(
-        "mu_inaccurate_bs_eff",
-        dist.Normal(mu_mu_inaccurate_bs_eff, sigma_mu_inaccurate_bs_eff),
-    )
-    sigma_inaccurate_bs_eff = numpyro.sample(
-        "sigma_inaccurate_bs_eff",
-        dist.LogNormal(mu_sigma_inaccurate_bs_eff, sigma_sigma_inaccurate_bs_eff),
-    )
-
-    mu_ox_eff = numpyro.sample("mu_ox_eff", dist.Normal(mu_mu_ox_eff, sigma_mu_ox_eff))
-    sigma_ox_eff = numpyro.sample(
-        "sigma_ox_eff", dist.LogNormal(mu_sigma_ox_eff, sigma_sigma_ox_eff)
-    )
-
-    mu_seq_err = numpyro.sample(
-        "mu_seq_err", dist.Normal(mu_mu_seq_err, sigma_mu_seq_err)
-    )
-    sigma_seq_err = numpyro.sample(
-        "sigma_seq_err", dist.LogNormal(mu_sigma_seq_err, sigma_sigma_seq_err)
-    )
+    mu = numpyro.sample(f"mu_{name}", dist.Normal(mu_mu, sigma_mu))
+    sigma = numpyro.sample(f"sigma_{name}", dist.LogNormal(mu_sigma, sigma_sigma))
 
     with numpyro.plate("samples", num_samples, dim=-2):
-        raw_bs_eff = numpyro.sample("raw_bs_eff", dist.Normal(0, 1))
-        raw_inaccurate_bs_eff = numpyro.sample(
-            "raw_inaccurate_bs_eff", dist.Normal(0, 1)
-        )
-        raw_ox_eff = numpyro.sample("raw_ox_eff", dist.Normal(0, 1))
-        raw_seq_err = numpyro.sample("raw_seq_err", dist.Normal(0, 1))
+        raw = numpyro.sample(f"raw_{name}", dist.Normal(0, 1))
+        param = numpyro.deterministic(name, sigmoid(mu + sigma * raw))
 
-        bs_eff = numpyro.deterministic(
-            "bs_eff", sigmoid(mu_bs_eff + sigma_bs_eff * raw_bs_eff)
-        )
-        inaccurate_bs_eff = numpyro.deterministic(
-            "inaccurate_bs_eff",
-            sigmoid(
-                mu_inaccurate_bs_eff + sigma_inaccurate_bs_eff * raw_inaccurate_bs_eff
-            ),
-        )
-        ox_eff = numpyro.deterministic(
-            "ox_eff", sigmoid(mu_ox_eff + sigma_ox_eff * raw_ox_eff)
-        )
-        seq_err = numpyro.deterministic(
-            "seq_err", sigmoid(mu_seq_err + sigma_seq_err * raw_seq_err)
-        )
-
-    return bs_eff, inaccurate_bs_eff, ox_eff, seq_err
+    return param  # noqa: RET504
 
 
 def bs_likelihood(
@@ -149,7 +110,6 @@ def bs_likelihood(
     inaccurate_bs_eff: Array,
     seq_err: Array,
     theta: Array,
-    use_normal_approximation: bool = False,
 ) -> None:
     """Bisulphite sequencing likelihood.
 
@@ -160,40 +120,15 @@ def bs_likelihood(
         inaccurate_bs_eff: Inaccurate bisulphite conversion rate parameter.
         seq_err: Sequencing error rate parameter.
         theta: Methylation level parameter.
-        use_normal_approximation: Whether to use normal approximation of Binomial. Defaults to False.
     """
-    if use_normal_approximation:
-        with numpyro.handlers.mask(mask=bs_total <= NORMAL_APPROXIMATION_N):
-            numpyro.sample(
-                "bs_num_c",
-                dist.Binomial(
-                    bs_total,
-                    get_p_bs_c(theta, bs_eff, inaccurate_bs_eff, seq_err),
-                ),
-                obs=bs_c,
-            )
-        with numpyro.handlers.mask(mask=bs_total > NORMAL_APPROXIMATION_N):
-            numpyro.sample(
-                "bs_num_c_normal",
-                dist.Normal(
-                    bs_total * get_p_bs_c(theta, bs_eff, inaccurate_bs_eff, seq_err),
-                    jnp.sqrt(
-                        bs_total
-                        * get_p_bs_c(theta, bs_eff, inaccurate_bs_eff, seq_err)
-                        * (1.0 - get_p_bs_c(theta, bs_eff, inaccurate_bs_eff, seq_err))
-                    ),
-                ),
-                obs=bs_c,
-            )
-    else:
-        numpyro.sample(
-            "bs_num_c",
-            dist.Binomial(
-                bs_total,
-                get_p_bs_c(theta, bs_eff, inaccurate_bs_eff, seq_err),
-            ),
-            obs=bs_c,
-        )
+    numpyro.sample(
+        "bs_num_c",
+        dist.Binomial(
+            bs_total,
+            get_p_bs_c(theta, bs_eff, inaccurate_bs_eff, seq_err),
+        ),
+        obs=bs_c,
+    )
 
 
 def oxbs_likelihood(
@@ -204,7 +139,6 @@ def oxbs_likelihood(
     ox_eff: Array,
     seq_err: Array,
     theta: Array,
-    use_normal_approximation: bool = False,
 ) -> None:
     """Oxidative bisulphite sequencing likelihood.
 
@@ -216,48 +150,15 @@ def oxbs_likelihood(
         ox_eff: Oxidation efficiency rate parameter.
         seq_err: Sequencing error rate parameter.
         theta: Methylation level parameter.
-        use_normal_approximation: Whether to use normal approximation of Binomial. Defaults to False.
     """
-    if use_normal_approximation:
-        with numpyro.handlers.mask(mask=oxbs_total <= NORMAL_APPROXIMATION_N):
-            numpyro.sample(
-                "ox_num_c",
-                dist.Binomial(
-                    oxbs_total,
-                    get_p_oxbs_c(theta, bs_eff, inaccurate_bs_eff, ox_eff, seq_err),
-                ),
-                obs=oxbs_c,
-            )
-        with numpyro.handlers.mask(mask=oxbs_total > NORMAL_APPROXIMATION_N):
-            numpyro.sample(
-                "ox_num_c_normal",
-                dist.Normal(
-                    oxbs_total
-                    * get_p_oxbs_c(theta, bs_eff, inaccurate_bs_eff, ox_eff, seq_err),
-                    jnp.sqrt(
-                        oxbs_total
-                        * get_p_oxbs_c(
-                            theta, bs_eff, inaccurate_bs_eff, ox_eff, seq_err
-                        )
-                        * (
-                            1.0
-                            - get_p_oxbs_c(
-                                theta, bs_eff, inaccurate_bs_eff, ox_eff, seq_err
-                            )
-                        ),
-                    ),
-                ),
-                obs=oxbs_c,
-            )
-    else:
-        numpyro.sample(
-            "ox_num_c",
-            dist.Binomial(
-                oxbs_total,
-                get_p_oxbs_c(theta, bs_eff, inaccurate_bs_eff, ox_eff, seq_err),
-            ),
-            obs=oxbs_c,
-        )
+    numpyro.sample(
+        "ox_num_c",
+        dist.Binomial(
+            oxbs_total,
+            get_p_oxbs_c(theta, bs_eff, inaccurate_bs_eff, ox_eff, seq_err),
+        ),
+        obs=oxbs_c,
+    )
 
 
 def luxglm_bs_oxbs_model(
@@ -271,7 +172,6 @@ def luxglm_bs_oxbs_model(
     oxbs_c_control: Array,
     oxbs_total_control: Array,
     alpha_control: Array,
-    use_normal_approximation: bool = False,
 ) -> None:
     """LuxGLM BS/oxBS model.
 
@@ -286,16 +186,18 @@ def luxglm_bs_oxbs_model(
         oxbs_c_control: Number of C read-outs from oxBS-seq for control cytosines.
         oxbs_total_control: Number of total read-outs from oxBS-seq for control cytosines.
         alpha_control: Pseudocounts for priors of control cytosine.
-        use_normal_approximation: Whether to use normal approximation of Binomial. Defaults to False.
     """
     num_samples = bs_c.shape[-2]
     num_predictors = design_matrix.shape[-1]
     num_modifications = 3
     num_cytosines = bs_c.shape[-1]
 
-    bs_eff, inaccurate_bs_eff, ox_eff, seq_err = get_experimental_parameters(
-        num_samples
+    bs_eff = get_experimental_parameter("bs_eff", num_samples, 2, 1.29, 0.4, 0.5)
+    inaccurate_bs_eff = get_experimental_parameter(
+        "inaccurate_bs_eff", num_samples, -3, 1.29, 0.4, 0.5
     )
+    ox_eff = get_experimental_parameter("ox_eff", num_samples, 2, 1.29, 0.4, 0.5)
+    seq_err = get_experimental_parameter("seq_err", num_samples, -3, 1.29, 0.4, 0.5)
 
     theta_control = numpyro.sample("theta_control", dist.Dirichlet(alpha_control))
 
@@ -307,7 +209,6 @@ def luxglm_bs_oxbs_model(
             inaccurate_bs_eff,
             seq_err,
             theta_control,
-            use_normal_approximation,
         )
         oxbs_likelihood(
             oxbs_total_control,
@@ -317,7 +218,6 @@ def luxglm_bs_oxbs_model(
             ox_eff,
             seq_err,
             theta_control,
-            use_normal_approximation,
         )
 
     sigma_epsilon = numpyro.sample("sigma_y", dist.HalfNormal(1))
@@ -350,7 +250,6 @@ def luxglm_bs_oxbs_model(
         inaccurate_bs_eff,
         seq_err,
         theta,
-        use_normal_approximation,
     )
     oxbs_likelihood(
         oxbs_total,
@@ -360,7 +259,6 @@ def luxglm_bs_oxbs_model(
         ox_eff,
         seq_err,
         theta,
-        use_normal_approximation,
     )
 
 
@@ -370,7 +268,6 @@ def luxglm_bs_oxbs_two_step_control_model(
     oxbs_c_control: Array,
     oxbs_total_control: Array,
     alpha_control: Array,
-    use_normal_approximation: bool = False,
 ) -> None:
     """LuxGLM BS/oxBS model.
 
@@ -382,13 +279,15 @@ def luxglm_bs_oxbs_two_step_control_model(
         oxbs_c_control: Number of C read-outs from oxBS-seq for control cytosines.
         oxbs_total_control: Number of total read-outs from oxBS-seq for control cytosines.
         alpha_control: Pseudocounts for priors of control cytosine.
-        use_normal_approximation: Whether to use normal approximation of Binomial. Defaults to False.
     """
     num_samples = bs_c_control.shape[-2]
 
-    bs_eff, inaccurate_bs_eff, ox_eff, seq_err = get_experimental_parameters(
-        num_samples
+    bs_eff = get_experimental_parameter("bs_eff", num_samples, 2, 1.29, 0.4, 0.5)
+    inaccurate_bs_eff = get_experimental_parameter(
+        "inaccurate_bs_eff", num_samples, -3, 1.29, 0.4, 0.5
     )
+    ox_eff = get_experimental_parameter("ox_eff", num_samples, 2, 1.29, 0.4, 0.5)
+    seq_err = get_experimental_parameter("seq_err", num_samples, -3, 1.29, 0.4, 0.5)
 
     theta_control = numpyro.sample("theta_control", dist.Dirichlet(alpha_control))
 
@@ -400,7 +299,6 @@ def luxglm_bs_oxbs_two_step_control_model(
             inaccurate_bs_eff,
             seq_err,
             theta_control,
-            use_normal_approximation,
         )
         oxbs_likelihood(
             oxbs_total_control,
@@ -410,7 +308,6 @@ def luxglm_bs_oxbs_two_step_control_model(
             ox_eff,
             seq_err,
             theta_control,
-            use_normal_approximation,
         )
 
 
@@ -420,7 +317,6 @@ def luxglm_bs_oxbs_two_step_noncontrol_model(
     bs_total: Array,
     oxbs_c: Array,
     oxbs_total: Array,
-    use_normal_approximation: bool = False,
 ) -> None:
     """LuxGLM BS/oxBS model.
 
@@ -432,7 +328,6 @@ def luxglm_bs_oxbs_two_step_noncontrol_model(
         bs_total: Number of total read-outs from BS-seq for non-control cytosines.
         oxbs_c: Number of C read-outs from oxBS-seq for non-control cytosines.
         oxbs_total: Number of total read-outs from oxBS-seq for non-control cytosines.
-        use_normal_approximation: Whether to use normal approximation of Binomial. Defaults to False.
     """
     num_samples = bs_c.shape[-2]
     num_predictors = design_matrix.shape[-1]
@@ -487,7 +382,6 @@ def luxglm_bs_oxbs_two_step_noncontrol_model(
         inaccurate_bs_eff,
         seq_err,
         theta,
-        use_normal_approximation,
     )
     oxbs_likelihood(
         oxbs_total,
@@ -497,5 +391,4 @@ def luxglm_bs_oxbs_two_step_noncontrol_model(
         ox_eff,
         seq_err,
         theta,
-        use_normal_approximation,
     )

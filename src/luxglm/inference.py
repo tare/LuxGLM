@@ -227,7 +227,9 @@ def run_svi(
 
     design_matrix = data.design_matrix.astype(float)
 
-    guide = guide or AutoNormal(luxglm_bs_oxbs_model, init_loc_fn=init_to_mean)
+    guide = guide or AutoNormal(
+        luxglm_bs_oxbs_model, init_loc_fn=init_to_mean, init_scale=1
+    )
     optim = optim or Adam(step_size=1e-1)
     loss = loss or Trace_ELBO(num_particles=10)
     svi = SVI(luxglm_bs_oxbs_model, guide, optim, loss=loss)

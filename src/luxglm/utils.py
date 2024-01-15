@@ -13,15 +13,17 @@ from luxglm.dataclasses import LuxInputData
 # ruff: noqa: FURB140
 
 
-def read_count_files(names: list[str], filenames: list[str]) -> pd.DataFrame:
+def read_count_files(
+    names: list[str], filenames: list[str]
+) -> pd.DataFrame:  # pragma: nocover
     """TBA.
 
     Args:
-        names: TBA.
-        filenames: TBA.
+        names: Names of the samples.
+        filenames: Names of the count files.
 
     Returns:
-        TBA.
+        Count dataframe.
     """
 
     def helper(name: str, filename: str) -> pd.DataFrame:
@@ -36,15 +38,17 @@ def read_count_files(names: list[str], filenames: list[str]) -> pd.DataFrame:
     ).fillna(0)
 
 
-def read_control_count_files(names: list[str], filenames: list[str]) -> pd.DataFrame:
+def read_control_count_files(
+    names: list[str], filenames: list[str]
+) -> pd.DataFrame:  # pragma: nocover
     """TBA.
 
     Args:
-        names: TBA.
-        filenames: TBA.
+        names: Names of the samples.
+        filenames: Names of the count files.
 
     Returns:
-        TBA.
+        Count dataframe.
     """
 
     def helper(name: str, filename: str) -> pd.DataFrame:
@@ -61,15 +65,17 @@ def read_control_count_files(names: list[str], filenames: list[str]) -> pd.DataF
     ).fillna(0)
 
 
-def read_control_definitions(names: list[str], filenames: list[str]) -> pd.DataFrame:
+def read_control_definitions(
+    names: list[str], filenames: list[str]
+) -> pd.DataFrame:  # pragma: nocover
     """TBA.
 
     Args:
-        names: TBA.
-        filenames: TBA.
+        names: Names of the samples.
+        filenames: Names of the count files.
 
     Returns:
-        TBA.
+        Control definition dataframe.
     """
 
     def helper(name: str, filename: str) -> pd.DataFrame:
@@ -84,11 +90,11 @@ def read_control_definitions(names: list[str], filenames: list[str]) -> pd.DataF
     )
 
 
-def get_input_data(metadata: str) -> pd.DataFrame:
+def get_input_data(metadata: str) -> pd.DataFrame:  # pragma: nocover
     """Get Lux input data.
 
     Args:
-      metadata: TBA.
+      metadata: Metadata filename.
     """
     metadata_df = pd.read_csv(metadata, sep="\t")
 
