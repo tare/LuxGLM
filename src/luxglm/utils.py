@@ -18,7 +18,7 @@ from luxglm.dataclasses import LuxInputData
 def read_count_files(
     names: list[str], filenames: list[str]
 ) -> pd.DataFrame:  # pragma: nocover
-    """TBA.
+    """Read count files.
 
     Args:
         names: Names of the samples.
@@ -47,7 +47,7 @@ def read_count_files(
 def read_control_count_files(
     names: list[str], filenames: list[str]
 ) -> pd.DataFrame:  # pragma: nocover
-    """TBA.
+    """Read control count files.
 
     Args:
         names: Names of the samples.
@@ -78,7 +78,7 @@ def read_control_count_files(
 def read_control_definitions(
     names: list[str], filenames: list[str]
 ) -> pd.DataFrame:  # pragma: nocover
-    """TBA.
+    """Read control definitions.
 
     Args:
         names: Names of the samples.
