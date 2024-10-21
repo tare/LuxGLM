@@ -143,7 +143,11 @@ class LuxResult:
     posterior_samples: dict[str, Array]
 
     def methylation(self) -> pd.DataFrame:
-        """Posterior samples of methylation levels of non-control cytosines."""
+        """Posterior samples of methylation levels of non-control cytosines.
+
+        Returns:
+            Posterior samples of methylation levels of non-control cytosines in a dataframe.
+        """
         (
             num_posterior_samples,
             num_samples,
@@ -171,7 +175,11 @@ class LuxResult:
         )
 
     def methylation_controls(self) -> pd.DataFrame:
-        """Posterior samples of methylation levels of control cytosines."""
+        """Posterior samples of methylation levels of control cytosines.
+
+        Returns:
+            Posterior samples of methylation levels of control cytosines in a dataframe.
+        """
         (
             num_posterior_samples,
             num_samples,
@@ -205,7 +213,11 @@ class LuxResult:
         )
 
     def experimental_parameters(self) -> pd.DataFrame:
-        """Posterior samples of experimental parameters."""
+        """Posterior samples of experimental parameters.
+
+        Returns:
+            Posterior samples of experimental parameters in a dataframe.
+        """
         num_posterior_samples, num_samples, _ = self.posterior_samples["bs_eff"].shape
         experimental_parameters = ("bs_eff", "inaccurate_bs_eff", "ox_eff", "seq_err")
         num_experimental_parameters = len(experimental_parameters)
@@ -230,7 +242,11 @@ class LuxResult:
         )
 
     def coefficients(self) -> pd.DataFrame:
-        """Posterior samples of coefficients."""
+        """Posterior samples of coefficients.
+
+        Returns:
+            Posterior samples of coefficients in a dataframe.
+        """
         (
             num_posterior_samples,
             num_covariates,

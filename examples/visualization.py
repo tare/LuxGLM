@@ -1,11 +1,12 @@
-"""visualization.py."""
+"""visualization.py."""  # noqa: INP001
 
 from math import ceil
 
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
-from luxglm.dataclasses import LuxResult
 from matplotlib.figure import Figure
+
+from luxglm.dataclasses import LuxResult
 
 
 def plot_experimental_parameters(lux_result: LuxResult) -> Figure:
@@ -62,6 +63,7 @@ def plot_methylation_levels(lux_result: LuxResult) -> Figure:
         zip(
             methylation_df.index.get_level_values("chromosome"),
             methylation_df.index.get_level_values("position"),
+            strict=True,
         )
     )
 
@@ -132,6 +134,7 @@ def plot_coefficients(lux_result: LuxResult) -> Figure:
         zip(
             coefficients_df.index.get_level_values("chromosome"),
             coefficients_df.index.get_level_values("position"),
+            strict=True,
         )
     )
 

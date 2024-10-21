@@ -1,15 +1,20 @@
 """models.py."""
+
 import jax.numpy as jnp
 import numpyro
 import numpyro.distributions as dist
 from jax import Array
 from jax.nn import sigmoid, softmax
+from jax.typing import ArrayLike
 
 # ruff: noqa: SIM117, PLR0913, PLR0914, PLR0915, PLR0917
 
 
 def get_p_bs_c(
-    theta: Array, bs_eff: Array, inaccurate_bs_eff: Array, seq_err: Array
+    theta: ArrayLike,
+    bs_eff: ArrayLike,
+    inaccurate_bs_eff: ArrayLike,
+    seq_err: ArrayLike,
 ) -> Array:
     """Calculate p_bs(C|theta, experimental parameters).
 
@@ -32,11 +37,11 @@ def get_p_bs_c(
 
 
 def get_p_oxbs_c(
-    theta: Array,
-    bs_eff: Array,
-    inaccurate_bs_eff: Array,
-    ox_eff: Array,
-    seq_err: Array,
+    theta: ArrayLike,
+    bs_eff: ArrayLike,
+    inaccurate_bs_eff: ArrayLike,
+    ox_eff: ArrayLike,
+    seq_err: ArrayLike,
 ) -> Array:
     """Calculate p_oxbs(C|theta, experimental parameters).
 
@@ -104,12 +109,12 @@ def get_experimental_parameter(
 
 
 def bs_likelihood(
-    bs_total: Array,
-    bs_c: Array,
-    bs_eff: Array,
-    inaccurate_bs_eff: Array,
-    seq_err: Array,
-    theta: Array,
+    bs_total: ArrayLike,
+    bs_c: ArrayLike,
+    bs_eff: ArrayLike,
+    inaccurate_bs_eff: ArrayLike,
+    seq_err: ArrayLike,
+    theta: ArrayLike,
 ) -> None:
     """Bisulphite sequencing likelihood.
 
@@ -132,13 +137,13 @@ def bs_likelihood(
 
 
 def oxbs_likelihood(
-    oxbs_total: Array,
-    oxbs_c: Array,
-    bs_eff: Array,
-    inaccurate_bs_eff: Array,
-    ox_eff: Array,
-    seq_err: Array,
-    theta: Array,
+    oxbs_total: ArrayLike,
+    oxbs_c: ArrayLike,
+    bs_eff: ArrayLike,
+    inaccurate_bs_eff: ArrayLike,
+    ox_eff: ArrayLike,
+    seq_err: ArrayLike,
+    theta: ArrayLike,
 ) -> None:
     """Oxidative bisulphite sequencing likelihood.
 
@@ -162,16 +167,16 @@ def oxbs_likelihood(
 
 
 def luxglm_bs_oxbs_model(
-    design_matrix: Array,
-    bs_c: Array,
-    bs_total: Array,
-    oxbs_c: Array,
-    oxbs_total: Array,
-    bs_c_control: Array,
-    bs_total_control: Array,
-    oxbs_c_control: Array,
-    oxbs_total_control: Array,
-    alpha_control: Array,
+    design_matrix: ArrayLike,
+    bs_c: ArrayLike,
+    bs_total: ArrayLike,
+    oxbs_c: ArrayLike,
+    oxbs_total: ArrayLike,
+    bs_c_control: ArrayLike,
+    bs_total_control: ArrayLike,
+    oxbs_c_control: ArrayLike,
+    oxbs_total_control: ArrayLike,
+    alpha_control: ArrayLike,
 ) -> None:
     """LuxGLM BS/oxBS model.
 
@@ -263,11 +268,11 @@ def luxglm_bs_oxbs_model(
 
 
 def luxglm_bs_oxbs_two_step_control_model(
-    bs_c_control: Array,
-    bs_total_control: Array,
-    oxbs_c_control: Array,
-    oxbs_total_control: Array,
-    alpha_control: Array,
+    bs_c_control: ArrayLike,
+    bs_total_control: ArrayLike,
+    oxbs_c_control: ArrayLike,
+    oxbs_total_control: ArrayLike,
+    alpha_control: ArrayLike,
 ) -> None:
     """LuxGLM BS/oxBS model.
 
@@ -312,11 +317,11 @@ def luxglm_bs_oxbs_two_step_control_model(
 
 
 def luxglm_bs_oxbs_two_step_noncontrol_model(
-    design_matrix: Array,
-    bs_c: Array,
-    bs_total: Array,
-    oxbs_c: Array,
-    oxbs_total: Array,
+    design_matrix: ArrayLike,
+    bs_c: ArrayLike,
+    bs_total: ArrayLike,
+    oxbs_c: ArrayLike,
+    oxbs_total: ArrayLike,
 ) -> None:
     """LuxGLM BS/oxBS model.
 

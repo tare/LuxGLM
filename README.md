@@ -32,7 +32,7 @@ This documentation focuses on the third and fourth points.
 ### PyPI
 
 ```console
-$ pip install luglm
+$ pip install luxglm
 ```
 
 ### GitHub

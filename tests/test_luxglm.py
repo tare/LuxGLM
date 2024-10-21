@@ -1,14 +1,17 @@
 """test_luxglm.py."""
+
 import numpy as np
+import numpy.typing as npt
 import numpyro
 import numpyro.distributions as dist
 import pandas as pd
 import pytest
 from jax import random
+from numpyro.infer import MCMC, NUTS
+
 from luxglm.dataclasses import LuxInputData
 from luxglm.inference import run_nuts, run_svi
 from luxglm.utils import get_mcmc_summary
-from numpyro.infer import MCMC, NUTS
 
 numpyro.enable_x64()
 
@@ -16,9 +19,13 @@ LOW_EXPERIMENTAL_PARAMETER_VALUE = 0.1
 HIGH_EXPERIMENTAL_PARAMETER_VALUE = 0.9
 
 
-@pytest.fixture()
+@pytest.fixture
 def luxinputdata() -> LuxInputData:
-    """LuxInputData."""
+    """LuxInputData.
+
+    Returns:
+        Lux input data in LuxInputData dataclass.
+    """
     count_files = ["count_file_1.tsv", "count_file_2.tsv"]
     control_count_files = ["control_count_file_1.tsv", "control_count_file_2.tsv"]
     control_definition_files = ["control_definitions.tsv", "control_definitions.tsv"]
@@ -56,7 +63,7 @@ def luxinputdata() -> LuxInputData:
         ).set_index(["chromosome", "position"]),
     ]
 
-    for name, count_df in zip(metadata_df.name, count_dfs):
+    for name, count_df in zip(metadata_df.name, count_dfs, strict=True):
         count_df.columns = pd.MultiIndex.from_product(
             [[name], count_df.columns], names=["name", "count_type"]
         )
@@ -88,7 +95,7 @@ def luxinputdata() -> LuxInputData:
         ).set_index(["chromosome", "position", "control_type"]),
     ]
 
-    for name, control_count_df in zip(metadata_df.name, control_count_dfs):
+    for name, control_count_df in zip(metadata_df.name, control_count_dfs, strict=True):
         control_count_df.columns = pd.MultiIndex.from_product(
             [[name], control_count_df.columns], names=["name", "count_type"]
         )
@@ -116,7 +123,9 @@ def luxinputdata() -> LuxInputData:
         ).set_index("control_type"),
     ]
 
-    for name, control_definition_df in zip(metadata_df.name, control_definition_dfs):
+    for name, control_definition_df in zip(
+        metadata_df.name, control_definition_dfs, strict=True
+    ):
         control_definition_df.columns = pd.MultiIndex.from_product(
             [[name], control_definition_df.columns], names=["name", "count_type"]
         )
@@ -136,7 +145,7 @@ def luxinputdata() -> LuxInputData:
     ],
 )
 def test_get_data_covariates(
-    luxinputdata: LuxInputData, test_input: list[str], expected: np.ndarray
+    luxinputdata: LuxInputData, test_input: list[str], expected: npt.NDArray[np.int_]
 ) -> None:
     """Test get_data()."""
     lux_input_data = luxinputdata.get_data(test_input)
@@ -222,7 +231,7 @@ def test_get_data_covariates(
 )
 def test_run_nuts(
     luxinputdata: LuxInputData,
-    two_steps_inference: bool,
+    two_steps_inference: bool,  # noqa: FBT001
     covariates: list[str],
     expected: dict[tuple[str, str, int], dict[str, float]],
 ) -> None:

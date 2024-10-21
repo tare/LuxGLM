@@ -1,5 +1,7 @@
 """utils.py."""
-from typing import Any, Mapping
+
+from collections.abc import Mapping
+from typing import Any
 
 import jax.numpy as jnp
 import numpy as np
@@ -34,7 +36,11 @@ def read_count_files(
         return count_df
 
     return pd.concat(
-        (helper(name, filename) for name, filename in zip(names, filenames)), axis=1
+        (
+            helper(name, filename)
+            for name, filename in zip(names, filenames, strict=True)
+        ),
+        axis=1,
     ).fillna(0)
 
 
@@ -61,7 +67,11 @@ def read_control_count_files(
         return count_df
 
     return pd.concat(
-        (helper(name, filename) for name, filename in zip(names, filenames)), axis=1
+        (
+            helper(name, filename)
+            for name, filename in zip(names, filenames, strict=True)
+        ),
+        axis=1,
     ).fillna(0)
 
 
@@ -86,7 +96,11 @@ def read_control_definitions(
         return definition_df
 
     return pd.concat(
-        (helper(name, filename) for name, filename in zip(names, filenames)), axis=1
+        (
+            helper(name, filename)
+            for name, filename in zip(names, filenames, strict=True)
+        ),
+        axis=1,
     )
 
 
@@ -95,6 +109,9 @@ def get_input_data(metadata: str) -> pd.DataFrame:  # pragma: nocover
 
     Args:
       metadata: Metadata filename.
+
+    Returns:
+        Input data stored in LuxInputData dataclass.
     """
     metadata_df = pd.read_csv(metadata, sep="\t")
 
@@ -116,7 +133,7 @@ def get_mcmc_summary(mcmc: MCMC) -> pd.DataFrame:
         mcmc: MCMC object.
 
     Returns:
-        DataFrame.
+        MCMC summary stored in a dataframe.
     """
 
     def process_variable(
@@ -131,7 +148,8 @@ def get_mcmc_summary(mcmc: MCMC) -> pd.DataFrame:
                     res["index"] = [
                         tuple(map(int, x))
                         for x in zip(
-                            *jnp.unravel_index(jnp.arange(values.size), values.shape)
+                            *jnp.unravel_index(jnp.arange(values.size), values.shape),
+                            strict=True,
                         )
                     ]
                 else:
