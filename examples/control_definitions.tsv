@@ -1,0 +1,4 @@
+control_type	C_pseudocount	5mC_pseudocount	5hmC_pseudocount
+C	998	1	1
+5mC	1	998	1
+5hmC	6	2	72
