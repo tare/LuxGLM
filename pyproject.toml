@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "luxglm"
-version = "1.0.0"
+version = "1.1.0"
 description = "A probabilistic covariate model for quantification of DNA methylation modifications with complex experimental designs"
 authors = [
     "Tarmo Äijö <tarmo.aijo@gmail.com>",
